@@ -1,0 +1,82 @@
+/* Set the Sider to occupy the full height */
+.ant-layout-sider {
+	height: 100vh;
+	position: fixed;
+	top: 0;
+	left: 0;
+	overflow: hidden;
+}
+
+.logo-container {
+	text-align: center;
+	padding: 20px;
+}
+
+.logo {
+	width: 100px;
+	height: auto;
+}
+
+.brand-name {
+	color: white;
+	font-size: 35px;
+	font-weight: bold;
+	margin-top: 10px;
+}
+
+.custom-menu {
+	flex: 1;
+}
+
+.custom-menu .ant-menu-item-selected {
+	background-color: #1e90ff;
+	border-radius: 8px;
+}
+
+.custom-menu .ant-menu-item a {
+	color: #fff;
+}
+
+/* Fix the footer at the bottom of the sidebar */
+.admin-footer {
+	position: absolute;
+	bottom: 0;
+	width: 100%;
+	padding: 20px;
+	background-color: #011640;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	border-top: 1px solid #fff;
+}
+
+.admin-info {
+	display: flex;
+	align-items: center;
+	color: #fff;
+}
+
+.admin-info p {
+	margin: 0;
+	padding-left: 10px;
+	font-size: 14px;
+}
+
+.admin-icon,
+.logout-icon {
+	font-size: 24px;
+	color: #fff;
+	cursor: pointer;
+}
+
+.logout-icon:hover {
+	color: #ff4d4f;
+}
+
+/* Main Content Area should take up 81% of the width */
+.site-layout {
+	width: 81%;
+	margin-left: auto;
+	padding: 24px;
+	background-color: #fff;
+}
