@@ -29,6 +29,7 @@ const AdminLayout = () => {
 			{/* Sidebar */}
 			<Sider width={'19%'} style={{ backgroundColor: '#011640' }}>
 				<div className="logo-container">
+					<div className="circular-logo"></div>
 					<h2 className="brand-name">PRO LAPTOP</h2>
 				</div>
 
@@ -63,7 +64,7 @@ const AdminLayout = () => {
 							/>
 						}
 					>
-						<Link to="/admin/products">Category/product</Link>
+						<Link to="/admin/products">Product</Link>
 					</Menu.Item>
 					<Menu.Item
 						key="/admin/reviews"
@@ -98,12 +99,15 @@ const AdminLayout = () => {
 			<Layout>
 				{/* Content */}
 				<Content className="site-layout">
-					<Search
-						placeholder="Search..."
-						onSearch={onSearch}
-						enterButton
-						style={{ width: 400 }}
-					/>
+					{/* Hiển thị ô tìm kiếm ngoại trừ trang dashboard */}
+					{location.pathname !== '/admin/dashboard' && (
+						<Search
+							placeholder="Search..."
+							onSearch={onSearch}
+							enterButton
+							style={{ width: 400 }}
+						/>
+					)}
 					<Outlet />
 				</Content>
 			</Layout>

@@ -1,15 +1,16 @@
-// pages/admin/UserManagement.jsx
-import { Table, Button } from 'antd';
+import { Table, Button, Modal, Form, Input } from 'antd';
+import { DeleteOutlined, EditOutlined, PlusOutlined, KeyOutlined } from '@ant-design/icons';
+import { useState } from 'react';
 
 const UserManagement = () => {
-	const users = [
+	const [users, setUsers] = useState([
 		{
 			id: 1,
 			name: 'Thao Doan',
 			email: 'user1@gmail.com',
 			address: 'Da Nang',
 			phone: '0905450317',
-			status: 'active',
+			password: '********', 
 		},
 		{
 			id: 2,
@@ -17,24 +18,38 @@ const UserManagement = () => {
 			email: 'user2@gmail.com',
 			address: 'Da Nang',
 			phone: '0905450317',
-			status: 'blocked',
+			password: '********', 
 		},
-		// Thêm các user khác
-	];
+	]);
 
-	const handleActivate = (userId) => {
-		console.log('Activating user with ID:', userId);
-		// Xử lý API kích hoạt tài khoản
+	const [isModalVisible, setIsModalVisible] = useState(false);
+	const [form] = Form.useForm();
+
+	const handleBlockUser = (userId) => {
+		
 	};
 
-	const handleBlock = (userId) => {
-		console.log('Blocking user with ID:', userId);
-		// Xử lý API block tài khoản
+	const handleAddUser = () => {
+		form.resetFields(); // Reset form fields before showing modal
+		setIsModalVisible(true);
 	};
 
-	const handleDelete = (userId) => {
-		console.log('Deleting user with ID:', userId);
-		// Xử lý API xóa tài khoản
+	const handleOk = () => {
+		form.validateFields().then(values => {
+			// Tạo một user mới từ form
+			const newUser = {
+				...values,
+				id: users.length + 1, // Set ID mới cho user
+			};
+			setUsers([...users, newUser]); // Thêm user vào danh sách
+			setIsModalVisible(false); // Đóng modal sau khi thêm thành công
+		}).catch(info => {
+			console.log('Validate Failed:', info);
+		});
+	};
+
+	const handleCancel = () => {
+		setIsModalVisible(false);
 	};
 
 	const columns = [
@@ -64,37 +79,25 @@ const UserManagement = () => {
 			dataIndex: 'phone',
 			key: 'phone',
 		},
+		
 		{
-			title: 'Status',
-			dataIndex: 'status',
-			key: 'status',
-		},
-		{
-			title: 'Actions',
+			title: 'Functions',
 			key: 'actions',
 			render: (text, record) => (
 				<span>
-					{record.status === 'active' ? (
-						<Button
-							type="primary"
-							danger
-							onClick={() => handleBlock(record.id)}
-						>
-							Block
-						</Button>
-					) : (
-						<Button type="primary" onClick={() => handleActivate(record.id)}>
-							Activate
-						</Button>
-					)}
 					<Button
 						type="default"
+						icon={<KeyOutlined />}
 						danger
-						onClick={() => handleDelete(record.id)}
-						style={{ marginLeft: 8 }}
-					>
-						Delete
-					</Button>
+						onClick={() => handleBlockUser(record.id)}
+						style={{ marginLeft: 8, color: 'red' }}
+					/>
+					{/* <Button
+						type="default"
+						icon={<EditOutlined />}
+						onClick={() => console.log('Editing user with ID:', record.id)}
+						style={{ marginLeft: 8, color: '#1890ff' }}
+					/> */}
 				</span>
 			),
 		},
@@ -103,13 +106,59 @@ const UserManagement = () => {
 	return (
 		<div>
 			<h1>User Management</h1>
+			<div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+				<Button type="primary" icon={<PlusOutlined />} onClick={handleAddUser}>
+					Add Account
+				</Button>
+			</div>
+
 			<Table
 				dataSource={users}
 				columns={columns}
 				rowKey="id"
 				bordered
-				pagination={false}
+				pagination={{ pageSize: 10 }} 
 			/>
+
+			{/* Modal for Adding User */}
+			<Modal
+				title="Add User"
+				visible={isModalVisible}
+				onOk={handleOk}
+				onCancel={handleCancel}
+			>
+				<Form form={form} layout="vertical">
+					<Form.Item
+						name="name"
+						label="Name"
+						rules={[{ required: true, message: 'Please input the name!' }]}
+					>
+						<Input />
+					</Form.Item>
+					<Form.Item
+						name="email"
+						label="Email"
+						rules={[{ required: true, message: 'Please input the email!' }]}
+					>
+						<Input />
+					</Form.Item>
+					<Form.Item
+						name="address"
+						label="Address"
+						rules={[{ required: true, message: 'Please input the address!' }]}
+					>
+						<Input />
+					</Form.Item>
+					<Form.Item
+						name="phone"
+						label="Phone"
+						rules={[{ required: true, message: 'Please input the phone!' }]}
+					>
+						<Input />
+					</Form.Item>
+				
+				</Form>
+			</Modal>
 		</div>
 	);
 };

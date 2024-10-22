@@ -1,9 +1,14 @@
 import { Row, Col, Typography, Input, Button } from 'antd';
 import '../login/login.css';
+import { useNavigate } from 'react-router-dom';
 
 const { Title, Text } = Typography;
 
 function LoginPage() {
+    const navigate = useNavigate();
+    const handleLogin = () => {
+        navigate('/admin/users');
+    }
 	return (
 		<Row
 			style={{
@@ -28,7 +33,7 @@ function LoginPage() {
 			{/* Right side: Login form */}
 			<Col xs={24} md={9} className="login-form">
 				<Title level={2} className="welcome-title">
-					Hi, Admin
+					ProLaptop
 				</Title>
 				<Row gutter={[0, 20]}>
 					<Col span={24}>
@@ -42,7 +47,7 @@ function LoginPage() {
 						/>
 					</Col>
 					<Col span={24}>
-						<Button type="primary" className="login-button">
+						<Button type="primary" className="login-button" onClick={handleLogin}>
 							Login
 						</Button>
 					</Col>
