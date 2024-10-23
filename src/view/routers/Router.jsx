@@ -8,6 +8,7 @@ import Product from '../pages/management/product/product';
 import Review from '../pages/management/review/review';
 import DashBoard from '../pages/management/dashBoard/dashBoard';
 import LoginPage from '../pages/login/login';
+import Chat from '../pages/management/chat/chat';
 
 const Router = createBrowserRouter([
 	{
@@ -18,6 +19,10 @@ const Router = createBrowserRouter([
 		path: '/admin',
 		element: <AdminLayout />,
 		children: [
+			{
+				path: 'dashboard',
+				element: <DashBoard />,
+			},
 			{
 				path: 'users',
 				element: <UserManagement />,
@@ -34,9 +39,10 @@ const Router = createBrowserRouter([
 				path: 'reviews',
 				element: <Review />,
 			},
+			
 			{
-				path: 'dashboard',
-				element: <DashBoard />,
+				path: 'chat',
+				element: <Chat />,
 			},
 		],
 	},

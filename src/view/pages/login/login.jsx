@@ -7,7 +7,7 @@ const { Title, Text } = Typography;
 function LoginPage() {
     const navigate = useNavigate();
     const handleLogin = () => {
-        navigate('/admin/users');
+        navigate('/admin/dashboard');
     }
 	return (
 		<Row

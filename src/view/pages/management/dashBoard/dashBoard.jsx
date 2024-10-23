@@ -51,7 +51,7 @@ export default function DashBoard() {
       <Row gutter={16}>
         <Col span={12}>
           <Card>
-            <Statistic title="Tổng Doanh Thu" value={totalRevenue} suffix="VND" />
+            <Statistic title="Total Revenue" value={totalRevenue} suffix="VND" />
           </Card>
         </Col>
         <Col span={12}>
@@ -65,7 +65,7 @@ export default function DashBoard() {
         </Col>
       </Row>
 
-      <Card title="Doanh Thu Theo Ngày">
+      <Card title="Daily Revenue">
         <ResponsiveContainer width="100%" height={400}>
           <LineChart data={data}>
             <CartesianGrid strokeDasharray="3 3" />

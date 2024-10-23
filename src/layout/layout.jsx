@@ -6,6 +6,7 @@ import {
 	OrderedListOutlined,
 	StarOutlined,
 	LogoutOutlined,
+	MessageOutlined,
 } from '@ant-design/icons';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import './layout.css';
@@ -24,6 +25,9 @@ const AdminLayout = () => {
 		navigate('/');
 	};
 
+
+	
+
 	return (
 		<Layout style={{ minHeight: '100vh' }}>
 			{/* Sidebar */}
@@ -40,6 +44,14 @@ const AdminLayout = () => {
 					selectedKeys={[location.pathname]}
 					className="custom-menu"
 				>
+					<Menu.Item
+						key="/admin/dashboard"
+						icon={
+							<DashboardOutlined style={{ color: '#fff', fontSize: '25px' }} />
+						}
+					>
+						<Link to="/admin/dashboard">Dashboard</Link>
+					</Menu.Item>
 					<Menu.Item
 						key="/admin/users"
 						icon={<UserOutlined style={{ color: '#fff', fontSize: '25px' }} />}
@@ -72,13 +84,14 @@ const AdminLayout = () => {
 					>
 						<Link to="/admin/reviews">Assessment management</Link>
 					</Menu.Item>
+					
 					<Menu.Item
-						key="/admin/dashboard"
+						key="/admin/chat"
 						icon={
-							<DashboardOutlined style={{ color: '#fff', fontSize: '25px' }} />
+							<MessageOutlined style={{ color: '#fff', fontSize: '25px' }} />
 						}
 					>
-						<Link to="/admin/dashboard">Dashboard</Link>
+						<Link to="/admin/chat">Message</Link>
 					</Menu.Item>
 				</Menu>
 
@@ -100,14 +113,16 @@ const AdminLayout = () => {
 				{/* Content */}
 				<Content className="site-layout">
 					{/* Hiển thị ô tìm kiếm ngoại trừ trang dashboard */}
-					{location.pathname !== '/admin/dashboard' && (
-						<Search
-							placeholder="Search..."
-							onSearch={onSearch}
-							enterButton
-							style={{ width: 400 }}
-						/>
-					)}
+					{location.pathname !== '/admin/dashboard' &&
+						location.pathname !== '/admin/chat' && (
+							<Search
+								placeholder="Search..."
+								onSearch={onSearch}
+								enterButton
+								style={{ width: 400 }}
+							/>
+						)}
+
 					<Outlet />
 				</Content>
 			</Layout>
