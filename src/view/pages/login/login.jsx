@@ -13,58 +13,67 @@ function LoginPage() {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
 
-    const { setAccount, setToken } = useAuth();
+    const { account, setAccount } = useAuth(); 
 
-	const handleLogin = async () => {
-		setError("");
+    const handleLogin = async () => {	
+        // Kiểm tra thông tin đầu vào
+        if (username.trim() === "") {
+            setError("Please enter username");
+            return;
+        }
+        if (password.trim() === "") {
+            setError("Please enter password");
+            return;
+        }
 	
-		if (username.trim() === "") {
-			setError("Please enter username");
-			return;
-		}
-		if (password.trim() === "") {
-			setError("Please enter password");
-			return;
-		}
+        try {
+            // Gọi API đăng nhập
+            const response = await authApi.adminLogin({ 
+                userName: username, 
+                password: password 
+            });
+            console.log(response);
 	
-		try {
-			const response = await authApi.adminLogin({ 
-				userName: username, 
-				password: password 
-			});
-			console.log(response);
-	
-			// Kiểm tra xem người dùng có vai trò là admin không
-			if (response.data && response.data.access_token) {
-				if (response.data.role !== 'admin') { // Kiểm tra vai trò
-					setError("You do not have permission to access this page.");
-					return;
-				}
-				setAccount({
-					id: response.data.id, 
-					userName: response.data.userName,
-					address: response.data.address,
-					email: response.data.email,
-					gender: response.data.gender,
-					phone: response.data.phone,
-					role: response.data.role,
-					avatar: response.data.avatar
-				});
-				navigate('/admin/dashboard');
-				console.log(response.data.role);
-			}
-		} catch (error) {
-			if (error.response && error.response.data.statusCode === 401) {
-				setError("Wrong username or password");
-			} else if (error.response && error.response.data.statusCode === 500) {
-				setError("Server error occurred.");
-				console.error(error);
-			} else {
-				console.error("Unknown error occurred: ", error);
-			}
-		}
-	};
-	
+            // Kiểm tra xem người dùng có vai trò là admin không
+            if (response.data && response.data.access_token) {
+                console.log(response.data.access_token);
+                if (response.data.role !== 'admin') { // Kiểm tra vai trò
+                    setError("You do not have permission to access this page.");
+                    return;
+                }
+                
+                // Lưu token vào local storage
+                localStorage.setItem('token', response.data.access_token);
+                localStorage.setItem('account', JSON.stringify(response.data));
+                // console.log(account);
+                // localStorage.parse(account);
+                
+                // Lưu thông tin người dùng vào context
+                setAccount({
+                    id: response.data.id, 
+                    userName: response.data.userName,
+                    address: response.data.address,
+                    email: response.data.email,
+                    gender: response.data.gender,
+                    phone: response.data.phone,
+                    role: response.data.role,
+                    avatar: response.data.avatar
+                });
+                navigate('/admin/dashboard');
+                console.log(response.data.role);
+            }
+        } catch (error) {
+            // Xử lý các lỗi từ API
+            if (error.response && error.response.data.statusCode === 401) {
+                setError("Wrong username or password");
+            } else if (error.response && error.response.data.statusCode === 500) {
+                setError("Server error occurred.");
+                console.error(error);
+            } else {
+                console.error("Unknown error occurred: ", error);
+            }
+        }
+    };
 	
     return (
         <Row style={{ minHeight: '100vh', display: 'flex', alignItems: 'center' }}>

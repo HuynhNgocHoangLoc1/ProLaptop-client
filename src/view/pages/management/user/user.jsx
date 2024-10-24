@@ -106,11 +106,11 @@ const UserManagement = () => {
 	return (
 		<div>
 			<h1>User Management</h1>
-			<div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+			{/* <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
 				<Button type="primary" icon={<PlusOutlined />} onClick={handleAddUser}>
 					Add Account
 				</Button>
-			</div>
+			</div> */}
 
 			<Table
 				dataSource={users}

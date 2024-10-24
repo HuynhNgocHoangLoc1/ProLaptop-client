@@ -10,6 +10,8 @@ import {
 } from '@ant-design/icons';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import './layout.css';
+import { useContext, useState, useEffect } from 'react'; 
+import AccountContext from '../context/accountContext';
 
 const { Sider, Content } = Layout;
 const { Search } = Input;
@@ -17,6 +19,17 @@ const { Search } = Input;
 const AdminLayout = () => {
 	const location = useLocation();
 	const navigate = useNavigate();
+	const { account, token } = useContext(AccountContext);
+
+	const [userName, setUserName] = useState('');
+	const [email, setEmail] = useState('');
+
+	useEffect(() => {
+		if (account) {
+			setUserName(account.userName || ''); // Thiết lập userName từ account
+			setEmail(account.email || ''); // Thiết lập email từ account
+		}
+	}, [account]);
 	const onSearch = (value) => {
 		console.log('Search:', value);
 	};
@@ -25,15 +38,12 @@ const AdminLayout = () => {
 		navigate('/');
 	};
 
-
-	
-
 	return (
 		<Layout style={{ minHeight: '100vh' }}>
 			{/* Sidebar */}
 			<Sider width={'19%'} style={{ backgroundColor: '#011640' }}>
 				<div className="logo-container">
-					<div className="circular-logo"></div>
+					<div className="circular-logo" style={{ backgroundImage: `url(${account?.avatar})` }}></div>
 					<h2 className="brand-name">PRO LAPTOP</h2>
 				</div>
 
@@ -46,9 +56,7 @@ const AdminLayout = () => {
 				>
 					<Menu.Item
 						key="/admin/dashboard"
-						icon={
-							<DashboardOutlined style={{ color: '#fff', fontSize: '25px' }} />
-						}
+						icon={<DashboardOutlined style={{ color: '#fff', fontSize: '25px' }} />}
 					>
 						<Link to="/admin/dashboard">Dashboard</Link>
 					</Menu.Item>
@@ -60,21 +68,13 @@ const AdminLayout = () => {
 					</Menu.Item>
 					<Menu.Item
 						key="/admin/orders"
-						icon={
-							<OrderedListOutlined
-								style={{ color: '#fff', fontSize: '25px' }}
-							/>
-						}
+						icon={<OrderedListOutlined style={{ color: '#fff', fontSize: '25px' }} />}
 					>
 						<Link to="/admin/orders">Order management</Link>
 					</Menu.Item>
 					<Menu.Item
 						key="/admin/products"
-						icon={
-							<ShoppingCartOutlined
-								style={{ color: '#fff', fontSize: '25px' }}
-							/>
-						}
+						icon={<ShoppingCartOutlined style={{ color: '#fff', fontSize: '25px' }} />}
 					>
 						<Link to="/admin/products">Product</Link>
 					</Menu.Item>
@@ -87,9 +87,7 @@ const AdminLayout = () => {
 					
 					<Menu.Item
 						key="/admin/chat"
-						icon={
-							<MessageOutlined style={{ color: '#fff', fontSize: '25px' }} />
-						}
+						icon={<MessageOutlined style={{ color: '#fff', fontSize: '25px' }} />}
 					>
 						<Link to="/admin/chat">Message</Link>
 					</Menu.Item>
@@ -100,8 +98,8 @@ const AdminLayout = () => {
 					<div className="admin-info">
 						<UserOutlined className="admin-icon" />
 						<div>
-							<p>Admin</p>
-							<p>admin@gmail.com</p>
+							<p>{userName}</p>
+							<p>{email}</p>
 						</div>
 					</div>
 					<LogoutOutlined className="logout-icon" onClick={handleLogout} />
