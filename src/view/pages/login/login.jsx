@@ -2,7 +2,7 @@ import { Row, Col, Typography, Input, Button } from 'antd';
 import '../login/login.css';
 import { useNavigate } from 'react-router-dom';
 import useAuth from '../../../hooks/adminAuth';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import authApi from '../../../api/authApi';
 
 const { Title, Text } = Typography;
@@ -14,6 +14,15 @@ function LoginPage() {
     const [error, setError] = useState("");
 
     const { account, setAccount } = useAuth(); 
+
+    // Kiểm tra dữ liệu từ localStorage khi trang được load
+    useEffect(() => {
+        const storedAccount = localStorage.getItem('account');
+        if (storedAccount) {
+            const parsedAccount = JSON.parse(storedAccount);
+            setAccount(parsedAccount);
+        }
+    }, [setAccount]); // Chỉ chạy 1 lần khi component được render
 
     const handleLogin = async () => {	
         // Kiểm tra thông tin đầu vào
@@ -45,8 +54,6 @@ function LoginPage() {
                 // Lưu token vào local storage
                 localStorage.setItem('token', response.data.access_token);
                 localStorage.setItem('account', JSON.stringify(response.data));
-                // console.log(account);
-                // localStorage.parse(account);
                 
                 // Lưu thông tin người dùng vào context
                 setAccount({
