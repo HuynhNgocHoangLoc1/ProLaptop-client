@@ -1,117 +1,126 @@
 import { Table, Button, Modal, Form, Input } from 'antd';
-import { DeleteOutlined, EditOutlined, PlusOutlined, KeyOutlined } from '@ant-design/icons';
+import { KeyOutlined } from '@ant-design/icons';
 import { useState, useEffect } from 'react';
 import userApi from '../../../../api/userApi';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
-  const [isLoading, setLoading] = useState(true); 
+  const [isLoading, setLoading] = useState(true);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null); // User được chọn
+  const [form] = Form.useForm();
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await userApi.getAllUser(); 
-        setUsers(
-          response.data.data.map((user, index) => ({
-            ...user,
-            id: index + 1, // Tạo id từ 1 -> n
-          }))
-        );
-        setLoading(false); 
+        const response = await userApi.getAllUser();
+        setUsers(response.data.data); // Sử dụng ID thực tế từ API
+        setLoading(false);
       } catch (error) {
         console.error("Failed to fetch users:", error);
-        setLoading(false); 
+        setLoading(false);
       }
     };
     fetchUsers();
-  }, []);
+  }, []); // Chỉ chạy một lần khi component mount
 
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [form] = Form.useForm();
+  const handleBlockUser = async (userId, isBlocked) => {
+    try {
+      const newStatus = !isBlocked; // Đảo ngược trạng thái hiện tại
+      await userApi.blockUser(userId, newStatus); // Gọi API với userId thực tế
 
-  const handleBlockUser = (userId) => {
-    // Logic để khóa tài khoản user
+      // Cập nhật UI
+      setUsers(prevUsers =>
+        prevUsers.map(user =>
+          user.id === userId ? { ...user, isBlock: newStatus } : user
+        )
+      );
+    } catch (error) {
+      console.error("Failed to block/unblock user:", error);
+    }
   };
 
-//   const handleAddUser = () => {
-//     form.resetFields(); 
-//     setIsModalVisible(true);
-//   };
-
-//   const handleOk = () => {
-//     form.validateFields()
-//       .then((values) => {
-//         const newUser = {
-//           ...values,
-//           id: users.length + 1, 
-//         };
-//         setUsers([...users, newUser]); // Thêm user vào danh sách
-//         setIsModalVisible(false); // Đóng modal sau khi thêm thành công
-//       })
-//       .catch((info) => {
-//         console.log('Validate Failed:', info);
-//       });
-//   };
+  const showConfirm = (userId, isBlocked) => {
+    const action = isBlocked ? "Unblock" : "Block";
+    Modal.confirm({
+      title: `Are you sure ${action} user ?`,
+      onOk: () => {
+        setConfirmLoading(true);
+        handleBlockUser(userId, isBlocked);
+        setConfirmLoading(false);
+      },
+      onCancel: () => {
+        // Có thể thêm logic nếu cần
+      },
+      okText: 'Yes',
+      cancelText: 'Cancel',
+    });
+  };
 
   const handleCancel = () => {
     setIsModalVisible(false);
   };
 
   const columns = [
-	{
-	  title: 'ID',
-	  dataIndex: 'id',
-	  key: 'id',
-	},
-	{
-	  title: 'Name',
-	  dataIndex: 'userName', // Dùng key từ API
-	  key: 'userName',
-	},
-	{
-	  title: 'Email',
-	  dataIndex: 'email',
-	  key: 'email',
-	},
-	{
-	  title: 'Address',
-	  dataIndex: 'address',
-	  key: 'address',
-	},
-	{
-	  title: 'Phone',
-	  dataIndex: 'phoneNumber', // Dùng key từ API
-	  key: 'phoneNumber',
-	},
-	{
-	  title: 'Status',
-	  dataIndex: 'isBlocked',
-	  key: 'isBlocked',
-	  render: (isBlocked) => (
-		<span style={{ color: isBlocked ? 'red' : 'green' }}>
-		  {isBlocked ? 'Blocked' : 'Active'}
-		</span>
-	  ),
-	},
-	{
-	  title: 'Functions',
-	  key: 'actions',
-	  render: (text, record) => (
-		<span>
-		  <Button
-			type="default"
-			icon={record.isBlocked ? <KeyOutlined /> : <KeyOutlined />}
-			danger={record.isBlocked} // Nếu user bị khóa thì button sẽ có màu đỏ
-			onClick={() => handleBlockUser(record.id, record.isBlocked)}
-			style={{ marginLeft: 8, color: record.isBlocked ? 'red' : 'green' }}
-		  >
-			{record.isBlocked ? 'Unblock' : 'Block'}
-		  </Button>
-		</span>
-	  ),
-	},
+    {
+      title: 'No',
+      key: 'no',
+      render: (_, __, index) => index + 1, // Tạo cột số thứ tự
+    },
+    // {
+    //   title: 'ID',
+    //   dataIndex: 'id',
+    //   key: 'id',
+    // },
+    {
+      title: 'Name',
+      dataIndex: 'userName',
+      key: 'userName',
+    },
+    {
+      title: 'Email',
+      dataIndex: 'email',
+      key: 'email',
+    },
+    {
+      title: 'Address',
+      dataIndex: 'address',
+      key: 'address',
+    },
+    {
+      title: 'Phone',
+      dataIndex: 'phoneNumber',
+      key: 'phoneNumber',
+    },
+    {
+      title: 'Status',
+      dataIndex: 'isBlock',
+      key: 'isBlock',
+      render: (isBlock) => (
+        <span style={{ color: isBlock ? 'red' : 'green' }}>
+          {isBlock ? 'Blocked' : 'Active'}
+        </span>
+      ),
+    },
+    {
+      title: 'Functions',
+      key: 'actions',
+      render: (text, record) => (
+        <span>
+          <Button
+            type="default"
+            icon={<KeyOutlined />}
+            danger={record.isBlock}
+            onClick={() => showConfirm(record.id, record.isBlock)} // Hiện modal xác nhận
+            style={{ marginLeft: 8, color: record.isBlock ? 'red' : 'green' }}
+          >
+            {record.isBlock ? 'Unblock' : 'Block'}
+          </Button>
+        </span>
+      ),
+    },
   ];
-  
 
   return (
     <div>
@@ -129,7 +138,6 @@ const UserManagement = () => {
       <Modal
         title="Add User"
         visible={isModalVisible}
-        // onOk={handleOk}
         onCancel={handleCancel}
       >
         <Form form={form} layout="vertical">

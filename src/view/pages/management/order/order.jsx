@@ -68,8 +68,8 @@ export default function Order() {
 
 	const columns = [
 		{
-			title: 'Id',
-			key: 'index',
+			title: 'No',
+			key: 'no',
 			render: (_, __, index) => index + 1,
 		},
 		{
@@ -103,7 +103,7 @@ export default function Order() {
 			render: (_, record) => (
 				<Select
 					value={record.statusDelivery}
-					onChange={(value) => handleStatusChange(record.id, value)} // Gọi hàm cập nhật với id
+					onChange={(value) => handleStatusChange(record.id, value)}
 					style={{ width: 150 }}
 				>
 					<Select.Option value={StatusDelivery.PENDING}>Pending</Select.Option>
