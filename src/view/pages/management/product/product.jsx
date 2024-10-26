@@ -136,7 +136,8 @@ export default function Product() {
       render: (text) => <img src={text} alt="Product" style={{ width: 100 }} />,
     },
     {
-      title: 'Actions',
+      title: 'Functions',
+      dataIndex: 'actions',
       key: 'actions',
       render: (_, record) => (
         <>
