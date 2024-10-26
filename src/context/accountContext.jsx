@@ -6,7 +6,6 @@ const AccountContext = createContext({});
 export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(() => localStorage.getItem('token') || null); // Lấy token từ localStorage
   const [account, setAccount] = useState(() => JSON.parse(localStorage.getItem('account')) || null); // Lấy account từ localStorage
-
   const providerValue = useMemo(
     () => ({ token, setToken, account, setAccount }),
     [token, setToken, account, setAccount]

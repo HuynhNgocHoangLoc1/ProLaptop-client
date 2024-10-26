@@ -7,6 +7,7 @@ import {
 	StarOutlined,
 	LogoutOutlined,
 	MessageOutlined,
+	AppstoreOutlined
 } from '@ant-design/icons';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import './layout.css';
@@ -26,8 +27,8 @@ const AdminLayout = () => {
 
 	useEffect(() => {
 		if (account) {
-			setUserName(account.userName || ''); // Thiết lập userName từ account
-			setEmail(account.email || ''); // Thiết lập email từ account
+			setUserName(account.userName || ''); 
+			setEmail(account.email || ''); 
 		}
 	}, [account]);
 	const onSearch = (value) => {
@@ -71,6 +72,12 @@ const AdminLayout = () => {
 						icon={<OrderedListOutlined style={{ color: '#fff', fontSize: '25px' }} />}
 					>
 						<Link to="/admin/orders">Order management</Link>
+					</Menu.Item>
+					<Menu.Item
+						key="/admin/categories"
+						icon={<AppstoreOutlined style={{ color: '#fff', fontSize: '25px' }} />}
+					>
+						<Link to="/admin/categories">Category</Link>
 					</Menu.Item>
 					<Menu.Item
 						key="/admin/products"

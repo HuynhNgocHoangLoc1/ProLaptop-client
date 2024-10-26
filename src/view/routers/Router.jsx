@@ -9,6 +9,7 @@ import Review from '../pages/management/review/review';
 import DashBoard from '../pages/management/dashBoard/dashBoard';
 import LoginPage from '../pages/login/login';
 import Chat from '../pages/management/chat/chat';
+import Category from '../pages/management/category/category';
 
 const Router = createBrowserRouter([
 	{
@@ -30,6 +31,10 @@ const Router = createBrowserRouter([
 			{
 				path: 'orders',
 				element: <Order />,
+			},
+			{
+				path: 'categories',
+				element: <Category />,
 			},
 			{
 				path: 'products',
