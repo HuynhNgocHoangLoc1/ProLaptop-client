@@ -1,4 +1,4 @@
-import { Table, Button, Modal, Form, Input } from 'antd';
+import { Table, Button, Modal, Form, Input, Pagination } from 'antd';
 import { KeyOutlined } from '@ant-design/icons';
 import { useState, useEffect } from 'react';
 import userApi from '../../../../api/userApi';
@@ -8,14 +8,17 @@ const UserManagement = () => {
   const [isLoading, setLoading] = useState(true);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null); // User được chọn
   const [form] = Form.useForm();
+  
+  // Thêm state cho pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         const response = await userApi.getAllUser();
-        setUsers(response.data.data); // Sử dụng ID thực tế từ API
+        setUsers(response.data.data);
         setLoading(false);
       } catch (error) {
         console.error("Failed to fetch users:", error);
@@ -23,14 +26,12 @@ const UserManagement = () => {
       }
     };
     fetchUsers();
-  }, []); // Chỉ chạy một lần khi component mount
+  }, []);
 
   const handleBlockUser = async (userId, isBlocked) => {
     try {
-      const newStatus = !isBlocked; // Đảo ngược trạng thái hiện tại
-      await userApi.blockUser(userId, newStatus); // Gọi API với userId thực tế
-
-      // Cập nhật UI
+      const newStatus = !isBlocked;
+      await userApi.blockUser(userId, newStatus);
       setUsers(prevUsers =>
         prevUsers.map(user =>
           user.id === userId ? { ...user, isBlock: newStatus } : user
@@ -44,14 +45,11 @@ const UserManagement = () => {
   const showConfirm = (userId, isBlocked) => {
     const action = isBlocked ? "Unblock" : "Block";
     Modal.confirm({
-      title: `Are you sure ${action} user ?`,
+      title: `Are you sure you want to ${action} this user?`,
       onOk: () => {
         setConfirmLoading(true);
         handleBlockUser(userId, isBlocked);
         setConfirmLoading(false);
-      },
-      onCancel: () => {
-        // Có thể thêm logic nếu cần
       },
       okText: 'Yes',
       cancelText: 'Cancel',
@@ -62,17 +60,16 @@ const UserManagement = () => {
     setIsModalVisible(false);
   };
 
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
   const columns = [
     {
       title: 'No',
       key: 'no',
-      render: (_, __, index) => index + 1, // Tạo cột số thứ tự
+      render: (_, __, index) => (currentPage - 1) * pageSize + index + 1,
     },
-    // {
-    //   title: 'ID',
-    //   dataIndex: 'id',
-    //   key: 'id',
-    // },
     {
       title: 'Name',
       dataIndex: 'userName',
@@ -98,7 +95,7 @@ const UserManagement = () => {
       dataIndex: 'isBlock',
       key: 'isBlock',
       render: (isBlock) => (
-        <span style={{ color: isBlock ? 'red' : 'green' }}>
+        <span style={{ color: isBlock ? 'red' : 'green', fontWeight: 'bold' }}>
           {isBlock ? 'Blocked' : 'Active'}
         </span>
       ),
@@ -109,11 +106,16 @@ const UserManagement = () => {
       render: (text, record) => (
         <span>
           <Button
-            type="default"
+            type={record.isBlock ? 'default' : 'primary'}
             icon={<KeyOutlined />}
             danger={record.isBlock}
-            onClick={() => showConfirm(record.id, record.isBlock)} // Hiện modal xác nhận
-            style={{ marginLeft: 8, color: record.isBlock ? 'red' : 'green' }}
+            onClick={() => showConfirm(record.id, record.isBlock)}
+            style={{
+              marginLeft: 8,
+              backgroundColor: record.isBlock ? 'green' : 'red',
+              borderColor: 'transparent',
+              color: 'white',
+            }}
           >
             {record.isBlock ? 'Unblock' : 'Block'}
           </Button>
@@ -123,22 +125,21 @@ const UserManagement = () => {
   ];
 
   return (
-    <div>
+    <div style={{ padding: '20px' }}>
       <h1>User Management</h1>
-
       <Table
         dataSource={users}
         columns={columns}
         rowKey="id"
         bordered
-        loading={isLoading} // Hiển thị loading khi đang fetch dữ liệu
-        pagination={{ pageSize: 10 }}
+        loading={isLoading}
+				pagination={{ pageSize: 5, position: ['bottomCenter'] }}
       />
-
       <Modal
         title="Add User"
         visible={isModalVisible}
         onCancel={handleCancel}
+        footer={null}
       >
         <Form form={form} layout="vertical">
           <Form.Item

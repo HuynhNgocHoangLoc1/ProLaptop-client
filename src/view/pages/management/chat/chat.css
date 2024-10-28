@@ -1,21 +1,16 @@
 .chat-container {
-    width: 100%; /* Chiếm 69% chiều rộng */
-    /* margin-left: auto; Đẩy hộp chat sang bên phải */
-    /* margin-right: 0; */
+    width: 100%;
+    height: 100vh; /* Chiếm toàn bộ chiều cao màn hình */
     display: flex;
     flex-direction: column;
-    /* justify-content: space-between; */
-    height: 100vh;
-    background-color: #ffffff;
-    /* border-radius: 10px; */
+    background-color: #f4f4f4; /* Màu nền sáng hơn */
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
     padding: 20px;
 }
 
-
 .message-list {
-    flex: 1;
-    overflow-y: auto;
+    flex: 1; /* Cho phép danh sách tin nhắn chiếm hết chiều cao còn lại */
+    overflow-y: auto; /* Cuộn nếu quá nhiều tin nhắn */
     padding: 20px;
     display: flex;
     flex-direction: column;
@@ -23,7 +18,6 @@
 }
 
 .message-list .ant-list-item {
-    background-color: #f1f1f1;
     padding: 10px;
     border-radius: 10px;
     max-width: 75%;
@@ -36,6 +30,7 @@
 .message-list .ant-list-item.you {
     align-self: flex-end;
     background-color: #e6f7ff;
+    border: 1px solid #1890ff; /* Đường viền cho tin nhắn của bạn */
 }
 
 .message-list .ant-list-item.admin {
@@ -47,7 +42,7 @@
     display: flex;
     gap: 10px;
     padding: 10px;
-    background-color: #fafafa;
+    background-color: #ffffff; /* Màu nền sáng cho ô nhập */
     border-top: 1px solid #ddd;
     border-radius: 10px;
 }
@@ -55,6 +50,7 @@
 .input-container .ant-input {
     flex: 1;
     border-radius: 5px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1); /* Đổ bóng nhẹ cho ô nhập */
 }
 
 .input-container .ant-btn {

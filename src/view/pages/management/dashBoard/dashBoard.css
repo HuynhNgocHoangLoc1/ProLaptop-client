@@ -1,0 +1,24 @@
+/* Giao diện tổng quan cho Dashboard */
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.ant-card {
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.ant-statistic-title {
+    font-size: 18px;
+    color: #555;
+}
+
+.ant-statistic-value {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.ant-card-body {
+    text-align: center; /* Canh giữa nội dung trong card */
+}

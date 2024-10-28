@@ -120,7 +120,8 @@ const AdminLayout = () => {
             {/* Main Content */}
             <Layout>
                 <Content className="site-layout">
-                    {location.pathname !== '/admin/dashboard' && (
+                    {/* Conditionally render Search bar */}
+                    {location.pathname !== '/admin/dashboard' && location.pathname !== '/admin/chat' && (
                         <Search
                             placeholder="Search..."
                             onSearch={onSearch}
@@ -128,7 +129,6 @@ const AdminLayout = () => {
                             style={{ width: 400, borderRadius: '8px', boxShadow: '0 1px 4px rgba(0,0,0,0.1)' }}
                         />
                     )}
-
                     <Outlet />
                 </Content>
             </Layout>

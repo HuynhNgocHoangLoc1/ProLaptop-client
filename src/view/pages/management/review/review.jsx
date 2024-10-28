@@ -94,7 +94,7 @@ export default function Review() {
 				columns={columns}
 				dataSource={reviews}
 				loading={loading} // Thêm thuộc tính loading vào Table
-				pagination={{ pageSize: 5 }}
+				pagination={{ pageSize: 5, position: ['bottomCenter'] }}
 			/>
 		</div>
 	);

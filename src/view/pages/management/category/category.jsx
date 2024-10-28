@@ -80,7 +80,7 @@ export default function Category() {
 						style={{ marginRight: 10 }}
 					/>
 					<Popconfirm
-						title="Are you sure to delete this review?"
+						title="Are you sure to delete this category?"
 						onConfirm={() => handleDelete(record.id)}
 						okText="Yes"
 						cancelText="No"
@@ -209,7 +209,7 @@ export default function Category() {
 			<Table
 				columns={columns}
 				dataSource={categories}
-				pagination={{ pageSize: 5 }}
+				pagination={{ pageSize: 5, position: ['bottomCenter'] }}
 				loading={isLoading}
 			/>
 
