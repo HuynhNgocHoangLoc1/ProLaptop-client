@@ -1,158 +1,131 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
 	Table,
 	Button,
 	Modal,
-	Form,
 	Input,
-	Select,
 	Upload,
 	message,
+	Popconfirm,
+	Row,
+	Col,
+	Select,
 } from 'antd';
 import {
-	EditOutlined,
-	DeleteOutlined,
 	PlusOutlined,
 	UploadOutlined,
+	EditOutlined,
+	DeleteOutlined,
 } from '@ant-design/icons';
-
-const { Option } = Select;
+import productApi from '../../../../api/productApi';
+import '../product/product.css';
+import categoryApi from '../../../../api/categoryApi';
 
 export default function Product() {
-	const initialData = [
-		{
-			key: '1',
-			name: 'Product A',
-			categoryID: '1',
-			price: 500,
-			stockQuantity: 100,
-			ram: '8GB',
-			cpu: 'Intel i5',
-			card: 'NVIDIA GTX 1050',
-			imageUrl:
-				'https://res.cloudinary.com/dh6dvndzn/image/upload/v1729507608/a4jlhpccjf2xvdhd4cfe.png', // Image URL
-		},
-		{
-			key: '2',
-			name: 'Product B',
-			categoryID: '2',
-			price: 700,
-			stockQuantity: 50,
-			ram: '16GB',
-			cpu: 'Intel i7',
-			card: 'NVIDIA GTX 1650',
-			imageUrl:
-				'https://res.cloudinary.com/dh6dvndzn/image/upload/v1729507608/a4jlhpccjf2xvdhd4cfe.png', // Image URL
-		},
-	];
+	const [products, setProducts] = useState([]);
+	const [categories, setCategories] = useState([]);
+	const [isModalOpen, setIsModalOpen] = useState(false);
+	const [productName, setProductName] = useState('');
+	const [editProductId, setEditProductId] = useState(null);
+	const [isLoading, setLoading] = useState(true);
+	const [previewImageUrl, setPreviewImageUrl] = useState(null); // Thêm state cho preview ảnh
 
-	const categoryData = [
-		{ key: '1', name: 'Category 1' },
-		{ key: '2', name: 'Category 2' },
-	];
+	// Các thuộc tính khác của sản phẩm
+	const [price, setPrice] = useState(0);
+	const [categoryId, setCategoryId] = useState('');
+	const [imageUrl, setImageUrl] = useState(null);
+	const [description, setDescription] = useState('');
+	const [quantity, setQuantity] = useState(0);
+	const [ram, setRam] = useState('');
+	const [cpu, setCpu] = useState('');
+	const [chip, setChip] = useState('');
+	const [card, setCard] = useState('');
+	const [hardDrive, setHardDrive] = useState('');
 
-	const [dataSource, setDataSource] = useState(initialData);
-	const [isModalVisible, setIsModalVisible] = useState(false);
-	const [editingProduct, setEditingProduct] = useState(null);
-	const [imageUrl, setImageUrl] = useState('');
-
-	const showModal = (record) => {
-		setEditingProduct(record || null);
-		setImageUrl(record?.imageUrl || ''); // Set image URL for editing
-		setIsModalVisible(true);
-	};
-
-	const handleCancel = () => {
-		setIsModalVisible(false);
-		setEditingProduct(null);
-		setImageUrl('');
-	};
-
-	const handleSave = (values) => {
-		const newProduct = {
-			...values,
-			imageUrl: imageUrl || 'https://via.placeholder.com/100', // Fallback image if none uploaded
+	useEffect(() => {
+		const fetchProducts = async () => {
+			setLoading(true);
+			try {
+				const response = await productApi.getAllProduct();
+				console.log('Product: ', response.data.data);
+				const fetchProducts = response.data.data.map((product) => ({
+					key: product.id,
+					id: product.id,
+					name: product.name,
+					imageUrl: product.imageUrl,
+					category: product.category,
+					price: product.price,
+					ram: product.ram,
+					cpu: product.cpu,
+					chip: product.chip,
+					hardDrive: product.hardDrive,
+					description: product.description,
+					stockQuantity: product.stockQuantity,
+					card: product.card,
+				}));
+				setProducts(fetchProducts);
+			} catch (error) {
+				console.error('Error fetching products:', error);
+				message.error('Failed to load products!');
+			} finally {
+				setLoading(false);
+			}
 		};
 
-		if (editingProduct) {
-			const updatedData = dataSource.map((item) =>
-				item.key === editingProduct.key ? { ...item, ...newProduct } : item,
-			);
-			setDataSource(updatedData);
-		} else {
-			const newData = {
-				key: `${dataSource.length + 1}`,
-				...newProduct,
-			};
-			setDataSource([...dataSource, newData]);
-		}
-		setIsModalVisible(false);
-		setImageUrl('');
-	};
+		fetchProducts();
+	}, []);
 
-	const handleDelete = (key) => {
-		const newData = dataSource.filter((item) => item.key !== key);
-		setDataSource(newData);
-	};
+	useEffect(() => {
+		const fetchCategories = async () => {
+			setLoading(true);
+			try {
+				const response = await categoryApi.getAllCategory();
+				const fetchCategories = response.data.data.map((category) => ({
+					id: category.id,
+					categoryName: category.name,
+				}));
+				setCategories(fetchCategories);
+			} catch (error) {
+				console.error('Error fetching categories:', error);
+				message.error('Failed to load categories!');
+			} finally {
+				setLoading(false);
+			}
+		};
 
-	const handleImageChange = (info) => {
-		if (info.file.status === 'done') {
-			const url = URL.createObjectURL(info.file.originFileObj);
-			setImageUrl(url); // Set the image URL to display
-			message.success(`${info.file.name} file uploaded successfully.`);
-		} else if (info.file.status === 'error') {
-			message.error(`${info.file.name} file upload failed.`);
-		}
-	};
+		fetchCategories();
+	}, []);
 
 	const columns = [
+		{ title: 'No', key: 'no', render: (_, __, index) => index + 1 },
+		{ title: 'Product Name', dataIndex: 'name', key: 'name' },
 		{
-			title: 'Product Name',
-			dataIndex: 'name',
-			key: 'name',
+			title: 'Image',
+			dataIndex: 'imageUrl',
+			key: 'imageUrl',
+			render: (text) => <img src={text} alt="product" width={70} height={70} />,
 		},
 		{
 			title: 'Category',
-			dataIndex: 'categoryID',
-			key: 'categoryID',
-			render: (text) => {
-				const category = categoryData.find((cat) => cat.key === text);
-				return category ? category.name : 'Unknown';
-			},
-		},
-		{
-			title: 'Price',
-			dataIndex: 'price',
-			key: 'price',
+			dataIndex: 'category',
+			key: 'category',
+			render: (category) => category?.name || 'Unknown Category',
 		},
 		{
 			title: 'Stock Quantity',
 			dataIndex: 'stockQuantity',
 			key: 'stockQuantity',
 		},
+		{ title: 'RAM', dataIndex: 'ram', key: 'ram' },
+		{ title: 'CPU', dataIndex: 'cpu', key: 'cpu' },
+		{ title: 'Chip', dataIndex: 'chip', key: 'chip' },
+		{ title: 'Card', dataIndex: 'card', key: 'card' },
+		{ title: 'Hard Drive', dataIndex: 'hardDrive', key: 'hardDrive' },
+		{ title: 'Description', dataIndex: 'description', key: 'description' },
+		{ title: 'Price', dataIndex: 'price', key: 'price' },
+
 		{
-			title: 'RAM',
-			dataIndex: 'ram',
-			key: 'ram',
-		},
-		{
-			title: 'CPU',
-			dataIndex: 'cpu',
-			key: 'cpu',
-		},
-		{
-			title: 'Graphics Card',
-			dataIndex: 'card',
-			key: 'card',
-		},
-		{
-			title: 'Image', // New Image Column
-			dataIndex: 'imageUrl',
-			key: 'imageUrl',
-			render: (text) => <img src={text} alt="Product" style={{ width: 100 }} />,
-		},
-		{
-			title: 'Functions',
+			title: 'Actions',
 			dataIndex: 'actions',
 			key: 'actions',
 			render: (_, record) => (
@@ -163,17 +136,198 @@ export default function Product() {
 						onClick={() => showModal(record)}
 						style={{ marginRight: 10 }}
 					/>
-					<Button
-						type="link"
-						icon={<DeleteOutlined />}
-						danger
-						onClick={() => handleDelete(record.key)}
-					/>
+					<Popconfirm
+						title="Are you sure to delete this product?"
+						onConfirm={() => handleDelete(record.id)}
+						okText="Yes"
+						cancelText="No"
+					>
+						<Button
+							icon={<DeleteOutlined />}
+							type="text"
+							style={{ color: 'red' }}
+						/>
+					</Popconfirm>
 				</>
 			),
 		},
 	];
 
+	const showModal = (record) => {
+		setProductName(record ? record.name : ''); // Kiểm tra nếu record không null
+		setImageUrl(record ? record.imageUrl : null);
+		setPreviewImageUrl(record ? record.imageUrl : null);
+		setPrice(record ? record.price : 0);
+		setCategoryId(record && record.category ? record.category.id : '');
+		setDescription(record ? record.description : '');
+		setQuantity(record ? record.stockQuantity : 0);
+		setRam(record ? record.ram : '');
+		setCpu(record ? record.cpu : '');
+		setChip(record ? record.chip : '');
+		setCard(record ? record.card : '');
+		setHardDrive(record ? record.hardDrive : '');
+		setEditProductId(record ? record.id : null);
+		setIsModalOpen(true);
+	};
+
+	const handleDelete = async (id) => {
+		try {
+			await productApi.deleteProduct(id);
+			setProducts(products.filter((product) => product.id !== id));
+			message.success('Product deleted successfully!');
+		} catch (error) {
+			message.error('Failed to delete product!');
+		}
+	};
+
+	const handleCreateProduct = async () => {
+		if (
+			!productName ||
+			!imageUrl ||
+			!price ||
+			!categoryId ||
+			!description ||
+			!quantity ||
+			!ram ||
+			!cpu ||
+			!chip ||
+			!card ||
+			!hardDrive
+		) {
+			message.error('Please enter all required fields!');
+			return;
+		}
+
+		const formData = new FormData();
+		formData.append('name', productName);
+		formData.append('imageUrl', imageUrl);
+		formData.append('price', price);
+		formData.append('categoryId', categoryId);
+		formData.append('description', description);
+		formData.append('stockQuantity', quantity);
+		formData.append('ram', ram);
+		formData.append('cpu', cpu);
+		formData.append('chip', chip);
+		formData.append('card', card);
+		formData.append('hardDrive', hardDrive);
+
+		try {
+			const response = await productApi.createProduct(formData);
+			// console.log('Product: ', response.data);
+			// console.log('Product: ', products);
+			const newProduct = {
+				key: response.data.product.id,
+				id: response.data.product.id,
+				category: response.data.product.category,
+				chip: response.data.product.chip,
+				cpu: response.data.product.cpu,
+				description: response.data.product.description,
+				hardDrive: response.data.product.hardDrive,
+				imageUrl: response.data.product.imageUrl,
+				name: response.data.product.name,
+				price: response.data.product.price,
+				ram: response.data.product.ram,
+				stockQuantity: response.data.product.stockQuantity,
+				card: response.data.product.card
+			};
+			// console.log('Product: ', newProduct);
+			setProducts([...products, newProduct]);
+			message.success('Product created successfully!');
+		} catch (error) {
+			message.error('Failed to create product!');
+		} finally {
+			resetModal();
+		}
+	};
+
+	const handleUpdateProduct = async () => {
+		if (
+			!productName ||
+			!imageUrl ||
+			!price ||
+			!categoryId ||
+			!description ||
+			!quantity ||
+			!ram ||
+			!cpu ||
+			!chip ||
+			!card ||
+			!hardDrive
+		) {
+			message.error('Please enter all required fields!');
+			return;
+		}
+
+		const formData = new FormData();
+		formData.append('name', productName);
+		formData.append('imageUrl', imageUrl);
+		formData.append('price', price);
+		formData.append('categoryId', categoryId);
+		formData.append('description', description);
+		formData.append('stockQuantity', quantity);
+		formData.append('ram', ram);
+		formData.append('cpu', cpu);
+		formData.append('chip', chip);
+		formData.append('card', card);
+		formData.append('hardDrive', hardDrive);
+
+		try {
+			const response = await productApi.updateProduct(
+				editProductId,
+				 formData
+			);
+			const updatedCategory = categories.find((cat) => cat.id === categoryId); // find updated category
+
+			const updatedProduct = {
+				id: editProductId,
+				name: productName,
+				imageUrl: imageUrl,
+				price: price,
+				category: { id: categoryId, name: updatedCategory.categoryName }, // update with new category name
+				description: description,
+				stockQuantity: quantity,
+				ram: ram,
+				cpu: cpu,
+				chip: chip,
+				card: card,
+				hardDrive: hardDrive,
+			};
+
+			const updatedProducts = products.map((product) =>
+				product.id === editProductId ? updatedProduct : product,
+			);
+
+			setProducts(updatedProducts);
+			message.success('Product updated successfully!');
+		} catch (error) {
+			message.error('Failed to update product!');
+			console.error(error);
+		} finally {
+			resetModal();
+		}
+	};
+
+	const resetModal = () => {
+		setProductName('');
+		setImageUrl(null);
+		setPreviewImageUrl(null);
+		setPrice(0);
+		setCategoryId('');
+		setDescription('');
+		setQuantity(0);
+		setRam('');
+		setCpu('');
+		setChip('');
+		setCard('');
+		setHardDrive('');
+		// setEditProductId(null);
+		setIsModalOpen(false);
+	};
+
+	const handleImageUpload = ({ file }) => {
+		setImageUrl(file);
+		setPreviewImageUrl(URL.createObjectURL(file)); // Hiển thị URL ảnh tạm thời để preview
+	};
 	return (
 		<div>
 			<h1>Product Management</h1>
@@ -188,94 +342,133 @@ export default function Product() {
 					type="primary"
 					icon={<PlusOutlined />}
 					onClick={() => showModal(null)}
+					style={{ marginBottom: 20 }}
 				>
 					Add Product
 				</Button>
 			</div>
+
 			<Table
 				columns={columns}
-				dataSource={dataSource}
-				pagination={{ pageSize: 5, position: ['bottomCenter'] }}
+				dataSource={products}
+				loading={isLoading}
+				pagination={{ pageSize: 3, position: ['bottomCenter'] }}
 			/>
+
 			<Modal
-				title={editingProduct ? 'Edit Product' : 'Add Product'}
-				visible={isModalVisible}
-				onCancel={handleCancel}
-				footer={null}
+				title={editProductId ? 'Edit Product' : 'Create Product'}
+				visible={isModalOpen}
+				onCancel={resetModal}
+				footer={[
+					<Button key="cancel" onClick={resetModal}>
+						Cancel
+					</Button>,
+					<Button
+						key="submit"
+						type="primary"
+						onClick={editProductId ? handleUpdateProduct : handleCreateProduct}
+					>
+						{editProductId ? 'Update' : 'Create'}
+					</Button>,
+				]}
 			>
-				<Form
-					layout="vertical"
-					initialValues={editingProduct}
-					onFinish={handleSave}
-				>
-					<Form.Item
-						name="name"
-						label="Product Name"
-						rules={[
-							{ required: true, message: 'Please input the product name!' },
-						]}
+				<Row gutter={16}>
+					<Col span={12}>
+						<label className="form-label">Product Name</label>
+						<Input
+							value={productName}
+							onChange={(e) => setProductName(e.target.value)}
+						/>
+					</Col>
+					<Col span={12}>
+						<label className="form-label">Price</label>
+						<Input
+							value={price}
+							type="number"
+							onChange={(e) => setPrice(e.target.value)}
+						/>
+					</Col>
+				</Row>
+				<Row gutter={16}>
+					<label
+						className="form-label"
+						style={{ marginTop: '10px', marginLeft: '10px' }}
 					>
-						<Input />
-					</Form.Item>
-					<Form.Item
-						name="categoryID"
-						label="Category"
-						rules={[{ required: true, message: 'Please select a category!' }]}
+						Category
+					</label>
+					<Select
+						placeholder="Select Category"
+						style={{ width: '100%', marginBottom: '10px', marginLeft: '7px' }}
+						value={categoryId}
+						onChange={setCategoryId}
 					>
-						<Select>
-							{categoryData.map((category) => (
-								<Option key={category.key} value={category.key}>
-									{category.name}
-								</Option>
-							))}
-						</Select>
-					</Form.Item>
-					<Form.Item
-						name="price"
-						label="Price"
-						rules={[{ required: true, message: 'Please input the price!' }]}
+						{categories.map((category) => (
+							<Option key={category.id} value={category.id}>
+								{category.categoryName}
+							</Option>
+						))}
+					</Select>
+					<Col span={12}>
+						<label className="form-label">Quantity</label>
+						<Input
+							value={quantity}
+							type="number"
+							onChange={(e) => setQuantity(e.target.value)}
+						/>
+					</Col>
+				</Row>
+				<Row gutter={16}>
+					<Col span={12}>
+						<label className="form-label">RAM</label>
+						<Input value={ram} onChange={(e) => setRam(e.target.value)} />
+					</Col>
+					<Col span={12}>
+						<label className="form-label">CPU</label>
+						<Input value={cpu} onChange={(e) => setCpu(e.target.value)} />
+					</Col>
+				</Row>
+				<Row gutter={16}>
+					<Col span={12}>
+						<label className="form-label">Chip</label>
+						<Input value={chip} onChange={(e) => setChip(e.target.value)} />
+					</Col>
+					<Col span={12}>
+						<label className="form-label">Card</label>
+						<Input value={card} onChange={(e) => setCard(e.target.value)} />
+					</Col>
+				</Row>
+				<Row gutter={16}>
+					<Col span={12}>
+						<label className="form-label">Hard Drive</label>
+						<Input
+							value={hardDrive}
+							onChange={(e) => setHardDrive(e.target.value)}
+						/>
+					</Col>
+					{previewImageUrl && (
+						<img
+							src={previewImageUrl}
+							alt="Selected"
+							width={100}
+							style={{ marginBottom: 10 }}
+						/>
+					)}
+
+					<Upload
+						beforeUpload={() => false}
+						onChange={handleImageUpload}
+						maxCount={1}
 					>
-						<Input type="number" />
-					</Form.Item>
-					<Form.Item
-						name="stockQuantity"
-						label="Stock Quantity"
-						rules={[
-							{ required: true, message: 'Please input the stock quantity!' },
-						]}
-					>
-						<Input type="number" />
-					</Form.Item>
-					<Form.Item name="ram" label="RAM">
-						<Input />
-					</Form.Item>
-					<Form.Item name="cpu" label="CPU">
-						<Input />
-					</Form.Item>
-					<Form.Item name="card" label="Graphics Card">
-						<Input />
-					</Form.Item>
-					<Form.Item name="imageUrl" label="Product Image">
-						<Upload
-							name="image"
-							listType="picture"
-							showUploadList={false}
-							onChange={handleImageChange}
-						>
-							<Button icon={<UploadOutlined />}>Click to Upload</Button>
-						</Upload>
-						{imageUrl && (
-							<img
-								src={imageUrl}
-								alt="Product"
-								style={{ width: 100, marginTop: 10 }}
-							/>
-						)}
-					</Form.Item>
-					<Button type="primary" htmlType="submit">
-						{editingProduct ? 'Save Changes' : 'Add Product'}
-					</Button>
-				</Form>
+						<Button icon={<UploadOutlined />} style={{ marginTop: 20 }}>
+							Select Image
+						</Button>
+					</Upload>
+				</Row>
+				<label className="form-label">Description</label>
+				<Input.TextArea
+					value={description}
+					onChange={(e) => setDescription(e.target.value)}
+				/>
 			</Modal>
 		</div>
 	);

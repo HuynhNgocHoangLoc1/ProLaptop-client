@@ -22,6 +22,7 @@ export default function Category() {
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [categoryName, setCategoryName] = useState('');
 	const [iconUrl, setIconUrl] = useState(null);
+	const [previewImageUrl, setPreviewImageUrl] = useState(null); // Thêm state cho preview ảnh
 	const [editCategoryId, setEditCategoryId] = useState(null);
 	const [isLoading, setLoading] = useState(true);
 
@@ -87,7 +88,7 @@ export default function Category() {
 					>
 						<Button
 							icon={<DeleteOutlined />}
-							type="text" // Loại bỏ viền
+							type="text"
 							style={{ color: 'red' }}
 						/>
 					</Popconfirm>
@@ -100,12 +101,12 @@ export default function Category() {
 		setEditCategoryId(record.id);
 		setCategoryName(record.name);
 		setIconUrl(record.iconUrl);
+		setPreviewImageUrl(record.iconUrl); // Hiển thị ảnh hiện tại nếu đang chỉnh sửa
 		setIsModalOpen(true);
 	};
 
 	const handleAddCategory = async () => {
 		if (!categoryName || !iconUrl) {
-			// Kiểm tra thêm cả iconUrl
 			message.error('Please enter a name and select an image!');
 			return;
 		}
@@ -116,15 +117,17 @@ export default function Category() {
 
 		try {
 			const response = await categoryApi.createCategory(formData);
+
+			console.log(response.data);
 			const newCategory = {
-				id: response.data.id, // Đảm bảo id này được lấy từ response
-				name: response.data.name,
-				iconUrl: response.data.iconUrl,
+				id: response.data.category.id,
+				name: response.data.category.name,
+				iconUrl: response.data.category.iconUrl,
 			};
-			setCategories([...categories, newCategory]); // Cập nhật danh sách ngay lập tức
+			// console.log(newCategory);
+			setCategories([...categories, newCategory]);
 			message.success('Category added successfully!');
 		} catch (error) {
-			console.error('Error adding category:', error.response.data);
 			message.error('Failed to add category!');
 		} finally {
 			resetModal();
@@ -133,29 +136,35 @@ export default function Category() {
 
 	const handleUpdateCategory = async () => {
 		if (!categoryName || !iconUrl) {
-			// Kiểm tra thêm cả iconUrl
 			message.error('Please enter a name and select an image!');
 			return;
 		}
-
+	
 		const formData = new FormData();
 		formData.append('name', categoryName);
 		formData.append('iconUrl', iconUrl);
-
+	
 		try {
 			const response = await categoryApi.updateCategory(
 				editCategoryId,
 				formData,
 			);
+			// console.log("Response: ", response);
+			
 			const updatedCategory = {
 				id: editCategoryId,
-				name: response.data.name,
-				iconUrl: response.data.iconUrl,
+				name: categoryName,
+				iconUrl: response?.data?.result?.iconUrl || iconUrl, // Use the new URL if provided
 			};
-			const updatedCategories = categories.map((category) =>
-				category.id === editCategoryId ? updatedCategory : category,
-			);
-			setCategories(updatedCategories); // Cập nhật danh sách ngay lập tức
+			
+			// console.log(updatedCategory);
+	
+			setCategories((prevCategories) =>
+				prevCategories.map((category) =>
+					category.id === editCategoryId ? updatedCategory : category
+				)
+			);			
+			
 			message.success('Category updated successfully!');
 		} catch (error) {
 			console.error('Error updating category:', error);
@@ -164,11 +173,14 @@ export default function Category() {
 			resetModal();
 		}
 	};
+	
 
 	const handleDelete = async (id) => {
 		try {
 			await categoryApi.deleteCategory(id);
-			setCategories(categories.filter((category) => category.id !== id));
+			setCategories((prevCategories) =>
+				prevCategories.filter((category) => category.id !== id),
+			);
 			message.success('Category deleted successfully!');
 		} catch (error) {
 			console.error('Error deleting category:', error);
@@ -179,12 +191,14 @@ export default function Category() {
 	const resetModal = () => {
 		setCategoryName('');
 		setIconUrl(null);
+		setPreviewImageUrl(null); // Xóa preview khi đóng modal
 		setIsModalOpen(false);
 		setEditCategoryId(null);
 	};
 
 	const handleImageUpload = ({ file }) => {
 		setIconUrl(file);
+		setPreviewImageUrl(URL.createObjectURL(file)); // Hiển thị URL ảnh tạm thời để preview
 	};
 
 	return (
@@ -226,6 +240,15 @@ export default function Category() {
 					onChange={(e) => setCategoryName(e.target.value)}
 					style={{ marginBottom: 10 }}
 				/>
+
+				{previewImageUrl && (
+					<img
+						src={previewImageUrl}
+						alt="Selected"
+						width={100}
+						style={{ marginBottom: 10 }}
+					/>
+				)}
 
 				<Upload
 					beforeUpload={() => false}
