@@ -8,7 +8,11 @@ const userApi = {
     blockUser: async (id, isBlock) => {
         const url = `/user/block/${id}`;
         return await axiosClient.applicationNoAuth.post(url, { isBlock }); // Gửi trạng thái isBlocked dưới dạng JSON
-      }
+    },
+    countUser: async () => {
+        const url = "/user/count";
+        return await axiosClient.applicationNoAuth.get(url);
+    },
       
 }
 export default userApi

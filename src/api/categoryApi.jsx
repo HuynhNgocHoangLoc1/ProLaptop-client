@@ -20,5 +20,15 @@ const categoryApi = {
         const url = `/category/${id}`;
         return await axiosClient.applicationNoAuth.delete(url);
     },
+
+    countCategory: async () => {
+        const url = "/category/count";
+        return await axiosClient.applicationNoAuth.get(url);
+    },
+
+    getProductCount : async () => {
+        const url = "/category/product-count";
+        return await axiosClient.applicationNoAuth.get(url);
+    }
 }
 export default categoryApi

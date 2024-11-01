@@ -19,6 +19,7 @@ export default function Order() {
 		const fetchOrders = async () => {
 			try {
 				const response = await orderApi.getAllOrder();
+				console.log(response.data.orders);
 				const fetchedOrders = response.data.orders.map((order, index) => ({
 					key: index + 1,
 					id: order.id,
@@ -28,7 +29,7 @@ export default function Order() {
 					price: order.price,
 					paymentMethod: order.paymentMethod,
 					statusDelivery: order.statusDelivery,
-					orderDate: order.createdAt,
+					date: order.date,
 				}));
 				setOrders(fetchedOrders);
 				setLoading(false);
@@ -133,7 +134,7 @@ export default function Order() {
 		},
 		{
 			title: 'Order Date',
-			dataIndex: 'orderDate',
+			dataIndex: 'date',
 			key: 'orderDate',
 		},
 	];

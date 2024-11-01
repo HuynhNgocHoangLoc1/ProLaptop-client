@@ -10,6 +10,11 @@ const reviewApi = {
     deleteReview: async (id) => {
         const url = `/review/${id}`;
         return await axiosClient.applicationNoAuth.delete(url);
+    },
+
+    countReview: async () => {
+        const url = "/review/count";
+        return await axiosClient.applicationNoAuth.get(url);
     }
 }
 
