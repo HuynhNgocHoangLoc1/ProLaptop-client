@@ -10,7 +10,7 @@ import {
     AppstoreOutlined
 } from '@ant-design/icons';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import './layout.css'; // Đảm bảo bạn đã thêm CSS ở đây
+import './layout.css';
 import { useContext, useState, useEffect } from 'react'; 
 import AccountContext from '../context/accountContext';
 
@@ -27,30 +27,35 @@ const AdminLayout = () => {
     const [email, setEmail] = useState('');
 
     useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            navigate('/error')
+        }
+        
         if (account) {
             setUserName(account.userName || ''); 
             setEmail(account.email || ''); 
         }
-    }, [account]);
+    }, [account, navigate]);
 
     const onSearch = (value) => {
         console.log('Search:', value);
     };
 
     const handleLogout = () => {
+        localStorage.removeItem('token');
+        localStorage.clear(); 
         navigate('/');
     };
 
     return (
         <Layout style={{ minHeight: '100vh', background: '#f0f2f5' }}>
-            {/* Sidebar */}
             <Sider width={'19%'} style={{ backgroundColor: '#022c43', boxShadow: '2px 0 5px rgba(0,0,0,0.15)' }}>
                 <div className="logo-container">
                     <div className="circular-logo" style={{ backgroundImage: `url(${account?.avatar})` }}></div>
                     <h2 className="brand-name">PRO LAPTOP</h2>
                 </div>
 
-                {/* Menu */}
                 <Menu
                     theme=""
                     mode="inline"
@@ -104,7 +109,6 @@ const AdminLayout = () => {
                     </SubMenu>
                 </Menu>
 
-                {/* Footer */}
                 <div className="admin-footer">
                     <div className="admin-info">
                         <UserOutlined className="admin-icon" />
@@ -117,10 +121,8 @@ const AdminLayout = () => {
                 </div>
             </Sider>
 
-            {/* Main Content */}
             <Layout>
                 <Content className="site-layout">
-                    {/* Conditionally render Search bar */}
                     {location.pathname !== '/admin/dashboard' && location.pathname !== '/admin/chat' && (
                         <Search
                             placeholder="Search..."
