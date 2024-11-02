@@ -14,6 +14,7 @@ import {
 	UploadOutlined,
 	EditOutlined,
 	DeleteOutlined,
+	SearchOutlined,
 } from '@ant-design/icons';
 import categoryApi from '../../../../api/categoryApi';
 
@@ -25,7 +26,8 @@ export default function Category() {
 	const [previewImageUrl, setPreviewImageUrl] = useState(null); // Thêm state cho preview ảnh
 	const [editCategoryId, setEditCategoryId] = useState(null);
 	const [isLoading, setLoading] = useState(true);
-
+	const [search, setSearch] = useState('');
+	const [filteredCategories, setFilteredCategories] = useState([]);
 	useEffect(() => {
 		const fetchCategories = async () => {
 			setLoading(true);
@@ -48,6 +50,23 @@ export default function Category() {
 
 		fetchCategories();
 	}, []);
+
+	useEffect(() => {
+		if (search.length !== 0) {
+			setFilteredCategories(
+				categories.filter((category) =>
+					['name'].some((key) =>
+						category[key]
+							?.toString()
+							.toLowerCase()
+							.includes(search.toLowerCase()),
+					),
+				),
+			);
+		} else {
+			setFilteredCategories(categories);
+		}
+	}, [search, categories]);
 
 	const columns = [
 		{
@@ -139,32 +158,32 @@ export default function Category() {
 			message.error('Please enter a name and select an image!');
 			return;
 		}
-	
+
 		const formData = new FormData();
 		formData.append('name', categoryName);
 		formData.append('iconUrl', iconUrl);
-	
+
 		try {
 			const response = await categoryApi.updateCategory(
 				editCategoryId,
 				formData,
 			);
 			// console.log("Response: ", response);
-			
+
 			const updatedCategory = {
 				id: editCategoryId,
 				name: categoryName,
 				iconUrl: response?.data?.result?.iconUrl || iconUrl, // Use the new URL if provided
 			};
-			
+
 			// console.log(updatedCategory);
-	
+
 			setCategories((prevCategories) =>
 				prevCategories.map((category) =>
-					category.id === editCategoryId ? updatedCategory : category
-				)
-			);			
-			
+					category.id === editCategoryId ? updatedCategory : category,
+				),
+			);
+
 			message.success('Category updated successfully!');
 		} catch (error) {
 			console.error('Error updating category:', error);
@@ -173,7 +192,6 @@ export default function Category() {
 			resetModal();
 		}
 	};
-	
 
 	const handleDelete = async (id) => {
 		try {
@@ -186,6 +204,10 @@ export default function Category() {
 			console.error('Error deleting category:', error);
 			message.error('Failed to delete category!');
 		}
+	};
+
+	const handleSearch = (e) => {
+		setSearch(e.target.value);
 	};
 
 	const resetModal = () => {
@@ -203,7 +225,22 @@ export default function Category() {
 
 	return (
 		<div>
-			<h1>Categories Management</h1>
+			<div className="header-wrapper search">
+				<Input
+					placeholder="Type here to search"
+					value={search}
+					onChange={handleSearch}
+					size="large"
+					prefix={<SearchOutlined />}
+					style={{
+						width: 300,
+						backgroundColor: '#fff',
+						color: 'blue',
+						border: 'none',
+					}}
+				/>
+			</div>
+			<h1 style={{ color: '#053971' }}>Categories Management</h1>
 			<div
 				style={{
 					display: 'flex',
@@ -222,7 +259,7 @@ export default function Category() {
 
 			<Table
 				columns={columns}
-				dataSource={categories}
+				dataSource={filteredCategories}
 				pagination={{ pageSize: 5, position: ['bottomCenter'] }}
 				loading={isLoading}
 			/>

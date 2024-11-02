@@ -16,6 +16,7 @@ import {
 	UploadOutlined,
 	EditOutlined,
 	DeleteOutlined,
+	SearchOutlined,
 } from '@ant-design/icons';
 import productApi from '../../../../api/productApi';
 import '../product/product.css';
@@ -41,6 +42,8 @@ export default function Product() {
 	const [chip, setChip] = useState('');
 	const [card, setCard] = useState('');
 	const [hardDrive, setHardDrive] = useState('');
+	const [search, setSearch] = useState('');
+	const [filteredProducts, setFilteredProducts] = useState([]);
 
 	useEffect(() => {
 		const fetchProducts = async () => {
@@ -95,6 +98,20 @@ export default function Product() {
 
 		fetchCategories();
 	}, []);
+
+	useEffect(() => {
+		if (search.length !== 0) {
+			setFilteredProducts(
+				products.filter((product) =>
+					['name', 'category', 'description', 'ram', 'cpu', 'chip', 'card', 'hardDrive','stockQuantity', 'price'].some((key) =>
+						product[key]?.toString().toLowerCase().includes(search.toLowerCase())
+					)
+				)
+			);
+		} else {
+			setFilteredProducts(products);
+		}
+	}, [products, search]);
 
 	const columns = [
 		{ title: 'No', key: 'no', render: (_, __, index) => index + 1 },
@@ -328,9 +345,27 @@ export default function Product() {
 		setImageUrl(file);
 		setPreviewImageUrl(URL.createObjectURL(file)); // Hiển thị URL ảnh tạm thời để preview
 	};
+	const handleSearch = (e) => {
+		setSearch(e.target.value);
+	}
 	return (
 		<div>
-			<h1>Product Management</h1>
+			<div className="header-wrapper search">
+				<Input
+					placeholder="Type here to search"
+					value={search}
+					onChange={handleSearch}
+					size="large"
+					prefix={<SearchOutlined />}
+					style={{
+						width: 300,
+						backgroundColor: '#fff',
+						color: 'blue',
+						border: 'none',
+					}}
+				/>
+			</div>
+			<h1 style={{ color: "#053971" }}>Product Management</h1>
 			<div
 				style={{
 					display: 'flex',
@@ -350,7 +385,7 @@ export default function Product() {
 
 			<Table
 				columns={columns}
-				dataSource={products}
+				dataSource={filteredProducts}
 				loading={isLoading}
 				pagination={{ pageSize: 3, position: ['bottomCenter'] }}
 			/>

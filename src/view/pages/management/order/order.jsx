@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Select, message } from 'antd';
+import { Table, Select, Input } from 'antd';
 import orderApi from '../../../../api/orderApi';
-
+import { SearchOutlined } from '@ant-design/icons';
 // Enum cho status delivery
 export const StatusDelivery = {
 	PENDING: 'pending',
@@ -13,6 +13,8 @@ export const StatusDelivery = {
 export default function Order() {
 	const [orders, setOrders] = useState([]);
 	const [loading, setLoading] = useState(true);
+	const [search, setSearch] = useState('');
+	const [filteredOrders, setFilteredOrders] = useState([]);
 
 	// Gọi API lấy danh sách orders
 	useEffect(() => {
@@ -41,6 +43,19 @@ export default function Order() {
 		fetchOrders();
 	}, []);
 
+	useEffect(() => {
+		if (search.length !== 0) {
+			setFilteredOrders(
+				orders.filter((order) =>
+					['email','phoneNumber', 'shippingAddress','price','paymentMethod', 'statusDelivery', 'date'].some((key) =>
+						order[key]?.toString().toLowerCase().includes(search.toLowerCase())
+					)
+				)
+			);
+		} else {
+			setFilteredOrders(orders);
+		}
+	}, [orders, search]);
 	// Hàm để thay đổi trạng thái giao hàng
 	const handleStatusChange = async (id, newStatus) => {
 		try {
@@ -61,6 +76,9 @@ export default function Order() {
 		}
 	};
 
+	const handleSearch = (e) => {
+		setSearch(e.target.value);
+	}
 	// Hàm để xác định màu sắc cho trạng thái
 	const getStatusColor = (status) => {
 		switch (status) {
@@ -141,10 +159,26 @@ export default function Order() {
 
 	return (
 		<div>
-			<h1>Order Management</h1>
+			<div className="header-wrapper search">
+				<Input
+					placeholder="Type here to search"
+					value={search}
+					onChange={handleSearch}
+					size="large"
+					prefix={<SearchOutlined />}
+					style={{
+						width: 300,
+						backgroundColor: '#fff',
+						color: 'blue',
+						border: 'none',
+					}}
+				/>
+			</div>
+			<h1 style={{ color: "#053971" }}>Order Management</h1>
+			<div></div>
 			<Table
 				columns={columns}
-				dataSource={orders}
+				dataSource={filteredOrders}
 				loading={loading}
 				pagination={{ pageSize: 5, position: ['bottomCenter'] }}
 			/>
