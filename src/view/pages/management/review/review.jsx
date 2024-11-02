@@ -1,11 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Popconfirm, message, Rate } from 'antd';
+import {
+	Table,
+	Button,
+	Popconfirm,
+	message,
+	Rate,
+	Input,
+} from 'antd';
 import reviewApi from '../../../../api/reviewApi';
-import { DeleteOutlined } from '@ant-design/icons';
+import { DeleteOutlined, SearchOutlined } from '@ant-design/icons';
 
 export default function Review() {
 	const [reviews, setReviews] = useState([]);
 	const [loading, setLoading] = useState(true); // State để kiểm soát loading
+	const [search, setSearch] = useState('');
+	const [filteredReviews, setFilteredReviews] = useState([]);
 
 	// Fetch reviews từ API khi component được mount
 	useEffect(() => {
@@ -30,6 +39,24 @@ export default function Review() {
 
 		fetchReviews();
 	}, []);
+
+	useEffect(() => {
+		if (search.length !== 0) {
+			setFilteredReviews(
+				reviews.filter((review) =>
+					['comment', 'rating', 'date'].some((key) =>
+						review[key]?.toString().toLowerCase().includes(search.toLowerCase()),
+					)
+				)
+			);
+		} else {
+			setFilteredReviews(reviews);
+		}
+	}, [reviews, search]);
+
+	const handleSearch = (e) => {
+		setSearch(e.target.value);
+	};
 
 	// Xử lý xóa review
 	const handleDelete = async (id) => {
@@ -89,10 +116,26 @@ export default function Review() {
 
 	return (
 		<div>
-			<h1>Review Management</h1>
+			<div className="header-wrapper search">
+				<Input
+					placeholder="Type here to search"
+					value={search}
+					onChange={handleSearch}
+					size="large"
+					prefix={<SearchOutlined />}
+					style={{
+						width: 300,
+						backgroundColor: '#fff',
+						color: 'blue',
+						border: 'none',
+					}}
+				/>
+			</div>
+			<h1 style={{ color: '#053971' }}>Review Management</h1>
+			<div></div>
 			<Table
 				columns={columns}
-				dataSource={reviews}
+				dataSource={filteredReviews}
 				loading={loading} // Thêm thuộc tính loading vào Table
 				pagination={{ pageSize: 5, position: ['bottomCenter'] }}
 			/>

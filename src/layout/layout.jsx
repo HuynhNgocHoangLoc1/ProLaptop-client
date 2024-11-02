@@ -15,14 +15,12 @@ import { useContext, useState, useEffect } from 'react';
 import AccountContext from '../context/accountContext';
 
 const { Sider, Content } = Layout;
-const { Search } = Input;
 const { SubMenu } = Menu;
 
 const AdminLayout = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const { account } = useContext(AccountContext);
-
     const [userName, setUserName] = useState('');
     const [email, setEmail] = useState('');
 
@@ -38,9 +36,7 @@ const AdminLayout = () => {
         }
     }, [account, navigate]);
 
-    const onSearch = (value) => {
-        console.log('Search:', value);
-    };
+    
 
     const handleLogout = () => {
         localStorage.removeItem('token');
@@ -123,14 +119,6 @@ const AdminLayout = () => {
 
             <Layout>
                 <Content className="site-layout">
-                    {location.pathname !== '/admin/dashboard' && location.pathname !== '/admin/chat' && (
-                        <Search
-                            placeholder="Search..."
-                            onSearch={onSearch}
-                            enterButton
-                            style={{ width: 400, borderRadius: '8px', boxShadow: '0 1px 4px rgba(0,0,0,0.1)' }}
-                        />
-                    )}
                     <Outlet />
                 </Content>
             </Layout>

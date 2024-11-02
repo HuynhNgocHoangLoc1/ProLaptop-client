@@ -9,6 +9,9 @@ import LoginPage from '../pages/login/login';
 import Chat from '../pages/management/chat/chat';
 import Category from '../pages/management/category/category';
 import ErrorPage from '../pages/errorPage/errorPage';
+import ForgotPassword from '../pages/changePassword/forgotPassword';
+import CheckToken from '../pages/changePassword/checkToken';
+import ChangePassword from '../pages/changePassword';
 
 const Router = createBrowserRouter([
     {
@@ -53,6 +56,19 @@ const Router = createBrowserRouter([
         path: '/error',
         element: <ErrorPage />, 
     },
+    {
+        path: '/forgotPassword',
+        element: <ForgotPassword/>
+    },
+    {
+        path: '/checkToken',
+        element: <CheckToken/>
+    },
+    {
+        path: '/changePassword',
+        element: <ChangePassword/>
+    },
+
 ]);
 
 export default Router;

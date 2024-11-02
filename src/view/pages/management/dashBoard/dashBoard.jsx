@@ -105,7 +105,8 @@ export default function DashBoard() {
     
 	return (
 		<div>
-			<h1>Dashboard Management</h1>
+			<h1 style={{ color: "#053971" }}>Dashboard Management</h1>
+			<div></div>
 			<Row gutter={16}>
 				<Col span={6}>
 					<Card>

@@ -82,6 +82,10 @@ function LoginPage() {
         }
     };
 	
+    const handleResetPassword = () => {
+        navigate('/forgotPassword');
+    };
+
     return (
         <Row style={{ minHeight: '100vh', display: 'flex', alignItems: 'center' }}>
             <Col xs={24} md={15} className="background-container">
@@ -119,7 +123,8 @@ function LoginPage() {
                         </Button>
                     </Col>
                     <Col span={24} className="reset-password">
-                        <Text className="reset-text">Reset password</Text>
+                        <Text className="reset-text"
+                        onClick={handleResetPassword}>Reset password</Text>
                     </Col>
                 </Row>
             </Col>
