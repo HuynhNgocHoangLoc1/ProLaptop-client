@@ -9,6 +9,7 @@ import LoginPage from '../pages/login/login';
 import Chat from '../pages/management/chat/chat';
 import Category from '../pages/management/category/category';
 import ErrorPage from '../pages/errorPage/errorPage';
+import TestChat from '../pages/testChat/testChat';
 
 const Router = createBrowserRouter([
     {
@@ -47,12 +48,17 @@ const Router = createBrowserRouter([
                 path: 'chat',
                 element: <Chat />,
             },
+            {
+                path: 'testChat',
+                element: <TestChat />,
+            },
         ],
     },
     {
         path: '/error',
         element: <ErrorPage />, 
     },
+   
 ]);
 
 export default Router;

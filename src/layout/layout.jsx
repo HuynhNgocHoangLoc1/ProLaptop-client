@@ -102,6 +102,12 @@ const AdminLayout = () => {
                         >
                             <Link to="/admin/chat">Message</Link>
                         </Menu.Item>
+                        <Menu.Item
+                            key="/admin/testChat"
+                            icon={<MessageOutlined style={{ color: '#fff', fontSize: '24px' }} />}
+                        >
+                            <Link to="/admin/testChat">Message</Link>
+                        </Menu.Item>
                     </SubMenu>
                 </Menu>
 
