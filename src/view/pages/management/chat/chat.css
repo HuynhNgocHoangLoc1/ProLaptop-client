@@ -1,76 +1,39 @@
 .chat-container {
-    width: 100%;
-    height: 100vh; /* Chiếm toàn bộ chiều cao màn hình */
-    display: flex;
-    flex-direction: column;
-    background-color: #f4f4f4; /* Màu nền sáng hơn */
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-    padding: 20px;
+  display: flex;
+  flex-direction: column;
+  height: 70vh; /* Chiều cao tối đa của modal */
+  background-color: #f9f9f9;
 }
 
 .message-list {
-    flex: 1; /* Cho phép danh sách tin nhắn chiếm hết chiều cao còn lại */
-    overflow-y: auto; /* Cuộn nếu quá nhiều tin nhắn */
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+  flex-grow: 1;
+  padding: 15px;
+  overflow-y: auto; /* Kích hoạt scroll */
+  background-color: #fff;
 }
 
-.message-list .ant-list-item {
-    padding: 10px;
-    border-radius: 10px;
-    max-width: 75%;
+.admin-bubble,
+.user-bubble {
+  margin: 5px;
+  padding: 10px 15px;
+  border-radius: 20px;
+  max-width: 60%;
 }
 
-.message-list .ant-list-item-meta-title {
-    font-weight: bold;
+.admin-bubble {
+  background-color: #4CAF50;
+  color: white;
+  align-self: flex-end;
 }
 
-.message-list .ant-list-item.you {
-    align-self: flex-end;
-    background-color: #e6f7ff;
-    border: 1px solid #1890ff; /* Đường viền cho tin nhắn của bạn */
+.user-bubble {
+  background-color: #f1f1f1;
+  color: #333;
+  align-self: flex-start;
 }
 
-.message-list .ant-list-item.admin {
-    align-self: flex-start;
-    background-color: #f1f1f1;
-}
-
-.input-container {
-    display: flex;
-    gap: 10px;
-    padding: 10px;
-    background-color: #ffffff; /* Màu nền sáng cho ô nhập */
-    border-top: 1px solid #ddd;
-    border-radius: 10px;
-}
-
-.input-container .ant-input {
-    flex: 1;
-    border-radius: 5px;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1); /* Đổ bóng nhẹ cho ô nhập */
-}
-
-.input-container .ant-btn {
-    background-color: #1890ff;
-    border-radius: 5px;
-    border: none;
-    padding: 0 20px;
-}
-
-.input-container .ant-btn:hover {
-    background-color: #40a9ff;
-}
-
-.input-container .ant-btn:active {
-    background-color: #096dd9;
-}
-
-.avatar {
-    border-radius: 50%;
-    border: 2px solid #ddd;
-    width: 40px;
-    height: 40px;
+.chat-input {
+  padding: 10px;
+  border-top: 1px solid #e8e8e8;
+  background-color: #f9f9f9;
 }

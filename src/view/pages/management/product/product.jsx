@@ -387,7 +387,7 @@ export default function Product() {
 				columns={columns}
 				dataSource={filteredProducts}
 				loading={isLoading}
-				pagination={{ pageSize: 3, position: ['bottomCenter'] }}
+				pagination={{ pageSize: 2, position: ['bottomCenter'] }}
 			/>
 
 			<Modal

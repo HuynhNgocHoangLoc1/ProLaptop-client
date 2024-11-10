@@ -96,11 +96,17 @@ const AdminLayout = () => {
                         >
                             <Link to="/admin/reviews">Assessment management</Link>
                         </Menu.Item>
-                        <Menu.Item
+                        {/* <Menu.Item
                             key="/admin/chat"
                             icon={<MessageOutlined style={{ color: '#fff', fontSize: '24px' }} />}
                         >
                             <Link to="/admin/chat">Message</Link>
+                        </Menu.Item> */}
+                        <Menu.Item
+                            key="/admin/listMess"
+                            icon={<MessageOutlined style={{ color: '#fff', fontSize: '24px' }} />}
+                        >
+                            <Link to="/admin/listMess">List message</Link>
                         </Menu.Item>
                     </SubMenu>
                 </Menu>

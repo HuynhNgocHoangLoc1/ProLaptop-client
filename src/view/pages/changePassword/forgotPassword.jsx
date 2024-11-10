@@ -19,7 +19,7 @@ function ForgotPassword() {
             navigate('/checkToken', { state: { email } }); 
         } catch (error) {
             console.error("Failed to send email:", error);
-            alert("Failed to send email. Please try again.");
+            alert("Email not found. Please try again.");
         }
     };
     
