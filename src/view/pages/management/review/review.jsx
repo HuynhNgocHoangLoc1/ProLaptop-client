@@ -71,11 +71,7 @@ export default function Review() {
 
 	// Cấu hình các cột trong bảng
 	const columns = [
-		{
-			title: 'No',
-			key: 'no',
-			render: (_, __, index) => index + 1,
-		},
+
 		{
 			title: 'Comment',
 			dataIndex: 'comment',

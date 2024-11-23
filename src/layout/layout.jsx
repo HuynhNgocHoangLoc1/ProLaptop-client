@@ -46,7 +46,7 @@ const AdminLayout = () => {
 
     return (
         <Layout style={{ minHeight: '100vh', background: '#f0f2f5' }}>
-            <Sider width={'19%'} style={{ backgroundColor: '#022c43', boxShadow: '2px 0 5px rgba(0,0,0,0.15)' }}>
+            <Sider width={'20%'} style={{ backgroundColor: '#022c43', boxShadow: '2px 0 5px rgba(0,0,0,0.15)' }}>
                 <div className="logo-container">
                     <div className="circular-logo" style={{ backgroundImage: `url(${account?.avatar})` }}></div>
                     <h2 className="brand-name">PRO LAPTOP</h2>

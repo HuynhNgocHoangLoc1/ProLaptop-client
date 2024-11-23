@@ -69,11 +69,7 @@ export default function Category() {
 	}, [search, categories]);
 
 	const columns = [
-		{
-			title: 'No',
-			key: 'no',
-			render: (_, __, index) => index + 1,
-		},
+
 		{
 			title: 'Name category',
 			dataIndex: 'name',
@@ -144,7 +140,7 @@ export default function Category() {
 				iconUrl: response.data.category.iconUrl,
 			};
 			// console.log(newCategory);
-			setCategories([...categories, newCategory]);
+			setCategories([newCategory, ...categories]);
 			message.success('Category added successfully!');
 		} catch (error) {
 			message.error('Failed to add category!');
@@ -262,6 +258,7 @@ export default function Category() {
 				dataSource={filteredCategories}
 				pagination={{ pageSize: 5, position: ['bottomCenter'] }}
 				loading={isLoading}
+				scroll = {{ y: 400 }}
 			/>
 
 			<Modal

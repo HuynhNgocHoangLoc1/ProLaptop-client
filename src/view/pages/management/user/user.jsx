@@ -33,7 +33,7 @@ const UserManagement = () => {
 		if (search.length !== 0) {
 			setFilteredUsers(
 				users.filter((user) =>
-					['userName', 'email', 'address', 'phoneNumber'].some((key) =>
+					['userName', 'email', 'address', 'phoneNumber','isBlock'].some((key) =>
 						user[key]?.toString().toLowerCase().includes(search.toLowerCase())
 					)
 				)
@@ -89,11 +89,6 @@ const UserManagement = () => {
 	};
 
 	const columns = [
-		{
-			title: 'No',
-			key: 'no',
-			render: (_, __, index) => (currentPage - 1) * pageSize + index + 1,
-		},
 		{
 			title: 'Name',
 			dataIndex: 'userName',

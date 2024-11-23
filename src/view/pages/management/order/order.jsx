@@ -96,11 +96,7 @@ export default function Order() {
 	};
 
 	const columns = [
-		{
-			title: 'No',
-			key: 'no',
-			render: (_, __, index) => index + 1,
-		},
+	
 		{
 			title: 'Email',
 			dataIndex: 'email',
@@ -180,7 +176,7 @@ export default function Order() {
 				columns={columns}
 				dataSource={filteredOrders}
 				loading={loading}
-				pagination={{ pageSize: 5, position: ['bottomCenter'] }}
+				pagination={{ pageSize: 5, position: ['bottomCenter'] }}v
 			/>
 		</div>
 	);
