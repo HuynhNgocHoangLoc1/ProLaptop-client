@@ -1,12 +1,12 @@
 import axiosClient from "./axiosClient";
 
 const messagesApi = {
-    sendMessage: async (data) => {
+    send: async (data) => {
         const url = '/messages';
         return await axiosClient.application.post(url, data);
     },
     getMessages: async (id) => {
-        const url = `/messages/${id}/1d9c91b5-404c-4e26-9ba8-ed571a037cb1`;
+        const url = `/messages/${id}/2dfd0de0-f0b8-42c0-8fe6-1e9d3ace3be0`;
         // console.log(url)
         return await axiosClient.application.get(url);
     },

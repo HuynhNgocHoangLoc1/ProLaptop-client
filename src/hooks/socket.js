@@ -1,4 +1,5 @@
 import io from 'socket.io-client';
+import messagesApi from '../api/messagesApi';
 
 let socket;
 const SERVER_URL = 'https://prolaptop-server.onrender.com'; // Đảm bảo URL chính xác của server WebSocket
@@ -48,12 +49,24 @@ export const disconnectSocket = () => {
 //   }
 // };
 
-export const sendMessage = (message) => {
+export const sendMessage = async (message) => {
   if (socket) {
-    socket.emit('sendMessage', message); // Đảm bảo tên sự kiện là 'sendMessage'
-    console.log('Message sent:', message);
+    try {
+      // Gửi tin nhắn qua socket
+      socket.emit('sendMessage', message);
+      console.log('Message sent via socket:', message);
+
+      // Gửi tin nhắn qua API
+      await messagesApi.send(message);
+      console.log('Message sent via API:', message);
+    } catch (error) {
+      console.error('Failed to send message:', error);
+    }
+  } else {
+    console.error('Socket is not connected');
   }
 };
+
 
 export const onNewMessage = (callback) => {
   if (socket) {

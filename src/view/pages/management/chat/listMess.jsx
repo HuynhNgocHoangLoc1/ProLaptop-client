@@ -3,7 +3,7 @@ import messagesApi from '../../../../api/messagesApi';
 import { Modal } from 'antd';
 import Chat from '../chat/chat';
 import moment from 'moment';
-import { CloseOutlined } from '@ant-design/icons';
+import { connectSocket, disconnectSocket, onNewMessage, offNewMessage } from '../../../../hooks/socket';
 import './chat.css';
 
 const ChatList = () => {
@@ -11,6 +11,7 @@ const ChatList = () => {
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
 
+  // Fetch initial chat list
   useEffect(() => {
     const fetchMessages = async () => {
       try {
@@ -21,6 +22,48 @@ const ChatList = () => {
       }
     };
     fetchMessages();
+
+    // Kết nối WebSocket
+    connectSocket();
+
+    // Lắng nghe sự kiện tin nhắn mới
+    onNewMessage((newMessage) => {
+      setChats((prevChats) => {
+        const updatedChats = [...prevChats];
+        const existingChatIndex = updatedChats.findIndex(
+          (chat) =>
+            (chat.sender.id === newMessage.senderId &&
+              chat.receiver.id === newMessage.receiverId) ||
+            (chat.sender.id === newMessage.receiverId &&
+              chat.receiver.id === newMessage.senderId)
+        );
+
+        if (existingChatIndex !== -1) {
+          // Cập nhật nội dung tin nhắn cuối cùng
+          updatedChats[existingChatIndex] = {
+            ...updatedChats[existingChatIndex],
+            content: newMessage.content,
+            timestamp: new Date().toISOString(),
+          };
+        } else {
+          // Thêm cuộc trò chuyện mới
+          updatedChats.unshift({
+            sender: { id: newMessage.senderId, userName: 'New User', avatar: '' },
+            receiver: { id: newMessage.receiverId },
+            content: newMessage.content,
+            timestamp: new Date().toISOString(),
+          });
+        }
+
+        return updatedChats;
+      });
+    });
+
+    return () => {
+      // Ngắt kết nối WebSocket khi component bị unmount
+      offNewMessage();
+      disconnectSocket();
+    };
   }, []);
 
   const openChat = (chat) => {
@@ -38,7 +81,7 @@ const ChatList = () => {
     <div style={styles.chatListContainer}>
       {chats.map((chat, index) => (
         <div key={index} style={styles.chatItem} onClick={() => openChat(chat)}>
-          <img src={chat.sender.avatar} alt="Avatar" style={styles.avatar} />
+          <img src={chat.sender.avatar || '/default-avatar.png'} alt="Avatar" style={styles.avatar} />
           <div style={styles.chatContent}>
             <div style={styles.chatHeader}>
               <span style={styles.chatName}>
@@ -52,7 +95,7 @@ const ChatList = () => {
           </div>
         </div>
       ))}
-        {isChatOpen && <Chat userId={selectedUserId} open={isChatOpen} setOnOpen={closeChat} />}
+      {isChatOpen && <Chat userId={selectedUserId} open={isChatOpen} setOnOpen={closeChat} />}
     </div>
   );
 };
@@ -92,11 +135,6 @@ const styles = {
   time: {
     fontSize: '12px',
     color: '#888',
-  },
-  closeIcon: {
-    fontSize: '16px',
-    color: '#888',
-    cursor: 'pointer',
   },
 };
 

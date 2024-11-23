@@ -8,43 +8,36 @@ import { connectSocket, disconnectSocket, sendMessage, onNewMessage, offNewMessa
 
 export default function Chat({ userId, onOpen, setOnOpen, senderId, receiverId }) {
   const { messages, appendMsg } = useMessages([]);
-  const admin = '1d9c91b5-404c-4e26-9ba8-ed571a037cb1';  // Đặt ID admin
+  const admin = '2dfd0de0-f0b8-42c0-8fe6-1e9d3ace3be0';  // Đặt ID admin
   const [content, setContent] = useState('');
 
   // Kết nối và ngắt kết nối socket
-// Kiểm tra lại sự kiện onNewMessage ở phía admin
-useEffect(() => {
-  connectSocket();
+  useEffect(() => {
+    connectSocket();
 
-  // Lắng nghe sự kiện "receive_message" khi có tin nhắn mới
-  onNewMessage((newMessage) => {
-    console.log('New message received from user:', newMessage);
+    onNewMessage((newMessage) => {
+      console.log('New message received:', newMessage);
+      if (newMessage.receiverId === admin && newMessage.senderId !== admin) {
+        const position = newMessage.senderId === userId ? 'left' : 'right';
+        appendMsg({
+          type: 'text',
+          content: { text: newMessage.content },
+          position,
+        });
+      }
+    });
 
-    // Kiểm tra nếu tin nhắn đến từ người dùng và người nhận là admin
-    if (newMessage.receiverId === admin && newMessage.senderId !== admin) {
-      const position = newMessage.senderId === userId ? 'left' : 'right';
-      appendMsg({
-        type: 'text',
-        content: { text: newMessage.content },
-        position,
-      });
-    }
-  });
+    return () => {
+      offNewMessage();
+      disconnectSocket();
+    };
+  }, [userId]);
 
-  return () => {
-    offNewMessage();
-    disconnectSocket();
-  };
-}, [userId]);
-
-
-  // Tải danh sách tin nhắn từ API
   useEffect(() => {
     const fetchMessages = async () => {
       try {
         const response = await messagesApi.getMessages(userId, senderId, receiverId);
         response.data.forEach((msg) => {
-          // Không hiển thị tin nhắn của admin trong danh sách ban đầu
           if (msg.senderId !== admin) {
             const position = msg.senderRole === 'admin' ? 'right' : 'left';
             appendMsg({
@@ -64,38 +57,29 @@ useEffect(() => {
     }
   }, [userId, senderId, receiverId]);
 
-  // Hàm gửi tin nhắn từ admin
-// Hàm gửi tin nhắn từ admin
-const handleSend = async (type, val) => {
-  if (type === 'text' && val.trim()) {
-    const newMessage = {
-      senderId: admin,   // Admin là người gửi
-      receiverId: userId, // Người nhận là người dùng
-      content: val,
-    };
+  const handleSend = async (type, val) => {
+    if (type === 'text' && val.trim()) {
+      const newMessage = {
+        senderId: admin,
+        receiverId: userId,
+        content: val,
+      };
 
-    // Cập nhật tin nhắn vào UI ngay lập tức (chỉ hiển thị bên admin)
-    appendMsg({
-      type: 'text',
-      content: { text: val },
-      position: 'right',  // Đặt tin nhắn của admin ở bên phải
-    });
+      appendMsg({
+        type: 'text',
+        content: { text: val },
+        position: 'right',
+      });
 
-    try {
-      // Gửi tin nhắn qua WebSocket
-      sendMessage(newMessage);
-
-      // Gửi tin nhắn tới database
-      await messagesApi.sendMessage(newMessage);
-
-      console.log('Message sent successfully and saved to database');
-    } catch (error) {
-      console.error('Error sending message:', error);
+      try {
+        sendMessage(newMessage);
+        console.log('Message sent successfully');
+      } catch (error) {
+        console.error('Error sending message:', error);
+      }
     }
-  }
-};
+  };
 
-  // Render tin nhắn
   function renderMessageContent(msg) {
     const { content, position } = msg;
     return (
@@ -120,10 +104,12 @@ const handleSend = async (type, val) => {
       <div className="chat-container">
         <div className="message-list">
           <ChatUI
-            locale="en-US" // Đặt ngôn ngữ là tiếng Anh
             messages={messages}
             renderMessageContent={renderMessageContent}
             onSend={handleSend}
+            locale={{
+              send: 'Send', // Đổi nút gửi tin nhắn thành 'Send'
+            }}
           />
         </div>
       </div>
