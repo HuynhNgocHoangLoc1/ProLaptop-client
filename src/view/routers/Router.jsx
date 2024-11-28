@@ -13,6 +13,7 @@ import ForgotPassword from '../pages/changePassword/forgotPassword';
 import CheckToken from '../pages/changePassword/checkToken';
 import ChangePassword from '../pages/changePassword';
 import ChatList from '../pages/management/chat/listMess';
+import Profile from '../pages/profile/profile';
 
 const Router = createBrowserRouter([
     {
@@ -55,6 +56,10 @@ const Router = createBrowserRouter([
                 path: 'listMess',
                 element: <ChatList />,
             },
+            {
+                path: 'profile',
+                element: <Profile/>
+            }            
         ],
     },
     {
@@ -73,6 +78,7 @@ const Router = createBrowserRouter([
         path: '/changePassword',
         element: <ChangePassword/>
     },
+    
 
 ]);
 

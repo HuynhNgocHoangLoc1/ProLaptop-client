@@ -44,6 +44,10 @@ const AdminLayout = () => {
         navigate('/');
     };
 
+    const handleToProfile = () => {
+        navigate('/admin/profile');
+    };
+
     return (
         <Layout style={{ minHeight: '100vh', background: '#f0f2f5' }}>
             <Sider width={'20%'} style={{ backgroundColor: '#022c43', boxShadow: '2px 0 5px rgba(0,0,0,0.15)' }}>
@@ -113,8 +117,8 @@ const AdminLayout = () => {
 
                 <div className="admin-footer">
                     <div className="admin-info">
-                        <UserOutlined className="admin-icon" />
-                        <div>
+                    <UserOutlined className="admin-icon" onClick={handleToProfile} />
+                    <div>
                             <p>{userName}</p>
                             <p>{email}</p>
                         </div>
