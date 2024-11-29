@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { Input, Button, Typography, message } from 'antd';
 import mailApi from '../../../api/mailApi';
+
+const { Title } = Typography;
 
 function CheckToken() {
     const navigate = useNavigate();
@@ -31,13 +34,12 @@ function CheckToken() {
             const otpCode = otp.join(''); // Ghép các ký tự lại thành chuỗi
             const response = await mailApi.confirmMail({ email, otp: otpCode });
             console.log("OTP verified successfully:", response);
-            alert("OTP is correct!"); // Hiển thị thông báo khi OTP đúng
+            message.success("OTP is correct!"); // Hiển thị thông báo khi OTP đúng
 
-            // Điều hướng tới trang changePassword nếu xác nhận thành công
             navigate('/changePassword', { state: { email } });
         } catch (error) {
             console.error("Failed to verify OTP:", error);
-            alert("Failed to verify OTP. Please try again.");
+            message.error("Failed to verify OTP. Please try again.");
         }
     };
 
@@ -50,12 +52,12 @@ function CheckToken() {
         height: '100vh',
         backgroundColor: '#fff'
       }}>
-        <h1 style={{
+        <Title level={1} style={{
           fontSize: '32px',
           fontWeight: 'bold',
           marginBottom: '20px',
           color: '#053971'
-        }}>Confirm OTP</h1>
+        }}>Confirm OTP</Title>
         
         <div style={{
           display: 'flex',
@@ -63,11 +65,10 @@ function CheckToken() {
           marginBottom: '20px'
         }}>
           {otp.map((_, index) => (
-            <input
+            <Input
               key={index}
               id={`otp-${index}`}
-              type="text"
-              maxLength="1"
+              maxLength={1}
               value={otp[index]}
               onChange={(e) => handleChange(e, index)}
               style={{
@@ -76,28 +77,24 @@ function CheckToken() {
                 fontSize: '24px',
                 textAlign: 'center',
                 borderRadius: '5px',
-                border: '1px solid #ccc',
-                backgroundColor: '#d9d7d7'
+                backgroundColor: '#d9d7d7',
               }}
             />
           ))}
         </div>
         
-        <button 
+        <Button 
+          type="primary"
+          size="large"
           onClick={handleSubmit}
           style={{
             width: '200px',
-            padding: '10px',
-            fontSize: '16px',
             borderRadius: '10px',
-            border: 'none',
-            backgroundColor: "#053971",
-            color: '#fff',
-            cursor: 'pointer'
+            backgroundColor: "#053971"
           }}
         >
           Confirm
-        </button>
+        </Button>
       </div>
     );
 }
