@@ -8,7 +8,7 @@ import { connectSocket, disconnectSocket, sendMessage, onNewMessage, offNewMessa
 
 export default function Chat({ userId, onOpen, setOnOpen, senderId, receiverId }) {
   const { messages, appendMsg } = useMessages([]);
-  const admin = '2dfd0de0-f0b8-42c0-8fe6-1e9d3ace3be0';  // Đặt ID admin
+  const admin = '63330ead-553c-440a-80d5-e9a2f7f1ab7e';  // Đặt ID admin
   const [content, setContent] = useState('');
 
   // Kết nối và ngắt kết nối socket

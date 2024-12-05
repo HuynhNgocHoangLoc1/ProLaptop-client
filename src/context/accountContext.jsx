@@ -41,8 +41,6 @@ export const AuthProvider = ({ children }) => {
 };
 
 const getAccountInfoFromToken = async (token) => {
-  // Gọi API để lấy thông tin tài khoản dựa trên token
-  // Ví dụ: return await accountInfoAPI.getInfoByToken(token);
   return {}; // Thay thế bằng logic thực tế của bạn
 };
 

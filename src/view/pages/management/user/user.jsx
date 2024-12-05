@@ -136,7 +136,7 @@ const UserManagement = () => {
 							color: 'white',
 						}}
 					>
-						{record.isBlock ? 'Unblock' : 'Block'}
+						{record.isBlock ? 'Active' : 'Block'}
 					</Button>
 				</span>
 			),

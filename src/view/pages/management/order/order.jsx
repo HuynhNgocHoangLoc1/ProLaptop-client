@@ -4,10 +4,10 @@ import orderApi from '../../../../api/orderApi';
 import { SearchOutlined } from '@ant-design/icons';
 // Enum cho status delivery
 export const StatusDelivery = {
-	PENDING: 'pending',
-	DELIVERING: 'delivering',
-	SUCCESS: 'success',
-	CANCELLED: 'cancelled',
+	PENDING: 'Pending',
+	DELIVERING: 'Delivering',
+	SUCCESS: 'Success',
+	CANCELLED: 'Cancelled',
 };
 
 export default function Order() {
