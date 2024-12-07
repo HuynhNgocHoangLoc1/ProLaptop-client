@@ -18,12 +18,7 @@ export const AuthProvider = ({ children }) => {
 
       // Set authenticate token to axios
       axiosClient.application.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-
-      // Gọi API để lấy thông tin tài khoản và lưu vào localStorage
-      getAccountInfoFromToken(token).then((accountData) => {
-        setAccount(accountData);
-        localStorage.setItem('account', JSON.stringify(accountData));
-      });
+      console.log("3: ",token);
     } else {
       // User logout
       delete axiosClient.application.defaults.headers.common["Authorization"];
@@ -41,7 +36,7 @@ export const AuthProvider = ({ children }) => {
 };
 
 const getAccountInfoFromToken = async (token) => {
-  return {}; // Thay thế bằng logic thực tế của bạn
+  return {}; 
 };
 
 export default AccountContext;

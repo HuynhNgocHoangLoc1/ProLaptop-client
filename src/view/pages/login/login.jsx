@@ -54,7 +54,7 @@ function LoginPage() {
                 // Lưu token vào local storage
                 localStorage.setItem('token', response.data.access_token);
                 localStorage.setItem('account', JSON.stringify(response.data));
-                
+                console.log("1: ",response.data);
                 // Lưu thông tin người dùng vào context
                 setAccount({
                     id: response.data.id, 
