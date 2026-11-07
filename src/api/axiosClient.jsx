@@ -1,9 +1,10 @@
 import axios from 'axios'
 import queryString from 'query-string'
+import { API_URL } from '../config/env'
 const axiosClient = {
     
     application : axios.create({
-        baseURL: 'https://prolaptop-server.onrender.com/api',
+        baseURL: API_URL,
         
         headers: {
             'content-type': 'application/json',
@@ -12,7 +13,7 @@ const axiosClient = {
     }),
 
     applicationNoAuth : axios.create({
-        baseURL: 'https://prolaptop-server.onrender.com/api',
+        baseURL: API_URL,
         
         headers: {
             'content-type': 'application/json',
@@ -21,7 +22,7 @@ const axiosClient = {
     }),
 
     formData : axios.create({
-        baseURL: 'https://prolaptop-server.onrender.com/api',
+        baseURL: API_URL,
         
         headers: {
             'content-type': 'multipart/form-data',
