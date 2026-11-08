@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ProLaptop Admin Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+/* Same visual system as the server doc. Each step of a user action has one colour used everywhere. */
+:root {
+  --bg: #f7f6f2;
+  --surface: #ffffff;
+  --surface-2: #f0eee7;
+  --ink: #1d1c19;
+  --muted: #67625a;
+  --line: #e4e0d6;
+  --accent: #1f5fc4;
+  --accent-soft: #e0eafb;
+
+  --ui: #b4580f;     --ui-bg: #fcebd9;
+  --hand: #7a4bd1;   --hand-bg: #eee6fb;
+  --api: #1f5fc4;    --api-bg: #e0eafb;
+  --http: #0f6e66;   --http-bg: #d8efec;
+  --srv: #334155;    --srv-bg: #e3e8ef;
+  --state: #5b6b12;  --state-bg: #edf2d4;
+  --guard: #b42a3c;  --guard-bg: #fbe2e5;
+  --ext: #8a5a00;    --ext-bg: #fbefd2;
+
+  --font: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  --shadow: 0 1px 2px rgba(0,0,0,.04), 0 6px 20px rgba(0,0,0,.05);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #141412; --surface: #1c1b19; --surface-2: #25241f; --ink: #ece9e1; --muted: #a39e92; --line: #34322d;
+    --accent: #7aa7f0; --accent-soft: #17263f;
+    --ui: #f0a35c;    --ui-bg: #3a2614;
+    --hand: #b394f0;  --hand-bg: #2a2140;
+    --api: #7aa7f0;   --api-bg: #17263f;
+    --http: #4fc2b6;  --http-bg: #173733;
+    --srv: #a9b6c9;   --srv-bg: #222a35;
+    --state: #b9cc5a; --state-bg: #272d12;
+    --guard: #f07786; --guard-bg: #3d1a20;
+    --ext: #e6b450;   --ext-bg: #33280f;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.25);
+    color-scheme: dark;
+  }
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 20px; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; animation: none !important; } }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.7 var(--font); -webkit-font-smoothing: antialiased; }
+a { color: var(--accent); }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+code { font-family: var(--mono); font-size: .86em; background: var(--surface-2); padding: 1px 6px; border-radius: 5px; }
+h1 { font-size: 2.2rem; line-height: 1.2; margin: 0 0 12px; letter-spacing: -.02em; text-wrap: balance; }
+h2 { font-size: 1.55rem; line-height: 1.3; margin: 0 0 8px; letter-spacing: -.01em; text-wrap: balance; }
+h3 { font-size: 1.1rem; margin: 32px 0 10px; }
+p { margin: 0 0 14px; max-width: 68ch; }
+ul { margin: 0 0 14px; padding-left: 20px; max-width: 68ch; }
+li { margin-bottom: 6px; }
+.muted { color: var(--muted); }
+.kicker { font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; font-weight: 700; color: var(--accent); margin-bottom: 8px; }
+
+.layout { display: grid; grid-template-columns: 230px minmax(0,1fr); min-height: 100vh; }
+nav.toc { position: sticky; top: 0; height: 100vh; padding: 32px 18px; border-right: 1px solid var(--line); background: var(--surface); }
+nav.toc b { display: block; font-size: 1rem; margin: 0 10px 2px; }
+nav.toc small { display: block; color: var(--muted); margin: 0 10px 22px; font-size: .78rem; }
+nav.toc a { display: block; padding: 7px 10px; border-radius: 8px; color: var(--muted); text-decoration: none; font-size: .9rem; }
+nav.toc a:hover { background: var(--surface-2); color: var(--ink); }
+nav.toc a.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+main { padding: 56px 56px 120px; min-width: 0; }
+.wrap { max-width: 920px; margin: 0 auto; }
+section { padding-top: 12px; margin-bottom: 84px; }
+.intro { color: var(--muted); font-size: 1.05rem; max-width: 64ch; margin-bottom: 26px; }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 22px 24px; box-shadow: var(--shadow); }
+.grid { display: grid; gap: 14px; }
+.g3 { grid-template-columns: repeat(3, minmax(0,1fr)); }
+.g2 { grid-template-columns: repeat(2, minmax(0,1fr)); }
+.grid > * { min-width: 0; }
+.note { border-left: 3px solid var(--accent); background: var(--surface); border-radius: 0 10px 10px 0; padding: 12px 18px; margin: 20px 0; font-size: .95rem; }
+.note.warn { border-left-color: var(--guard); }
+.note p:last-child { margin: 0; }
+.caption { color: var(--muted); font-size: .85rem; margin: 10px 2px 0; }
+.chip { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: .8rem; font-weight: 600; white-space: nowrap; }
+.c-ui { background: var(--ui-bg); color: var(--ui); }
+.c-hand { background: var(--hand-bg); color: var(--hand); }
+.c-api { background: var(--api-bg); color: var(--api); }
+.c-http { background: var(--http-bg); color: var(--http); }
+.c-srv { background: var(--srv-bg); color: var(--srv); }
+.c-state { background: var(--state-bg); color: var(--state); }
+.c-guard { background: var(--guard-bg); color: var(--guard); }
+.c-ext { background: var(--ext-bg); color: var(--ext); }
+.tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
+.tabs button { border: 1px solid var(--line); background: var(--surface); padding: 6px 14px; border-radius: 999px; font-size: .88rem; cursor: pointer; color: var(--muted); }
+.tabs button:hover { border-color: var(--accent); color: var(--ink); }
+.tabs button[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+@media (prefers-color-scheme: dark) { .tabs button[aria-selected="true"] { color: #0b1a33; } }
+
+.facts { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.fact { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 8px 14px; font-size: .88rem; color: var(--muted); }
+.fact b { color: var(--ink); font-family: var(--mono); font-weight: 500; margin-right: 6px; }
+
+.ov svg { display: block; width: 100%; height: auto; }
+.ov-box { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
+.ov-t { fill: var(--ink); font: 600 15px var(--font); }
+.ov-s { fill: var(--muted); font: 400 13px var(--font); }
+.ov-a { stroke: var(--muted); stroke-width: 1.6; fill: none; }
+.ov-ad { stroke: var(--muted); stroke-width: 1.4; fill: none; stroke-dasharray: 5 4; }
+.ah { fill: var(--muted); }
+
+.folders { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; }
+.folder { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+.folder code { background: none; padding: 0; font-weight: 500; color: var(--ink); }
+.folder p { margin: 4px 0 0; font-size: .85rem; color: var(--muted); }
+
+.di { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr; gap: 10px; align-items: center; }
+.box { border-radius: 10px; padding: 10px 14px; font-size: .88rem; line-height: 1.4; }
+.box b { display: block; font-family: var(--mono); font-weight: 500; font-size: .85rem; }
+.box span { font-size: .78rem; opacity: .85; }
+.arrow { color: var(--muted); font-size: 1.4rem; text-align: center; }
+pre.mini { background: #1e1d1a; color: #ebe7dc; border-radius: 10px; padding: 14px 18px; font: .82rem/1.65 var(--mono); overflow-x: auto; margin: 16px 0 0; }
+pre.mini i { color: #8f8a7c; }
+pre.mini em { color: #e9a76a; font-style: normal; }
+pre.mini s { text-decoration: none; color: #a7cf7a; }
+pre.mini u { text-decoration: none; color: #8fb8f0; }
+
+.strip { display: grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap: 8px; }
+.layer { border-radius: 12px; padding: 12px 10px; text-align: center; transition: opacity .25s, box-shadow .25s; border: 2px solid transparent; }
+.layer b { display: block; font-size: .88rem; }
+.layer span { display: block; font-size: .74rem; opacity: .85; line-height: 1.35; margin-top: 2px; }
+.layer.skip { opacity: .28; }
+.layer.stop { border-color: currentColor; box-shadow: 0 0 0 3px var(--guard-bg); }
+.layer.after { opacity: .12; }
+.steps { list-style: none; margin: 18px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; max-width: none; }
+.steps li { display: grid; grid-template-columns: 110px minmax(0,1fr); gap: 14px; align-items: baseline; margin: 0; font-size: .93rem; }
+.steps li .chip { justify-self: start; }
+.req { font-family: var(--mono); font-size: .84rem; background: var(--surface-2); border-radius: 8px; padding: 8px 12px; margin-bottom: 16px; overflow-wrap: anywhere; }
+.result { margin-top: 14px; font-size: .9rem; font-weight: 600; }
+.result.bad { color: var(--guard); }
+.result.ok { color: var(--accent); }
+
+.boot { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; max-width: none; }
+.boot li { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+.boot .n { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: .8rem; margin-bottom: 8px; }
+.boot b { display: block; font-size: .95rem; margin-bottom: 2px; }
+.boot p { margin: 0; font-size: .86rem; color: var(--muted); }
+.boot .f { font-family: var(--mono); font-size: .72rem; color: var(--muted); margin-top: 6px; }
+
+/* nested providers */
+.nest { border-radius: 12px; padding: 10px 14px 14px; border: 1.5px dashed var(--line); }
+.nest > .lbl { font-family: var(--mono); font-size: .8rem; font-weight: 500; margin-bottom: 8px; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.nest > .lbl span { font-family: var(--font); color: var(--muted); font-weight: 400; font-size: .8rem; }
+
+/* route map */
+.routes { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.6fr); gap: 14px; align-items: start; }
+.rt-group { display: flex; flex-direction: column; gap: 8px; }
+.rt-h { font-size: .72rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); font-weight: 700; }
+.rt { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; font-size: .86rem; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.rt code { background: none; padding: 0; color: var(--ink); font-weight: 500; }
+.rt span { color: var(--muted); font-size: .8rem; }
+.shell { border: 2px solid var(--http); border-radius: 14px; padding: 12px; background: var(--http-bg); }
+.shell .top { font-size: .86rem; color: var(--http); font-weight: 600; margin-bottom: 4px; }
+.shell .sub { font-size: .8rem; color: var(--muted); margin: 0 0 10px; }
+.shell .kids { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; }
+
+.flow-meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+.flow-meta code { font-size: .82rem; }
+.chain { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 12px 0 4px; }
+.chain i { color: var(--muted); font-style: normal; font-size: .85rem; }
+.mmd { margin-top: 16px; overflow-x: auto; }
+.mmd .out { display: flex; justify-content: center; min-width: 520px; }
+.mmd svg { max-width: 100%; height: auto; }
+.mmd pre { white-space: pre-wrap; font: .8rem var(--mono); color: var(--muted); }
+.flow-notes { margin: 16px 0 0; }
+
+details.more { margin-top: 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+details.more summary { cursor: pointer; padding: 12px 18px; font-weight: 600; font-size: .93rem; }
+.tw { overflow-x: auto; padding: 0 6px 6px; }
+table { width: 100%; border-collapse: collapse; font-size: .86rem; }
+th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-weight: 600; font-size: .78rem; }
+tr:last-child td { border-bottom: 0; }
+td code { white-space: nowrap; }
+.m { font-family: var(--mono); font-size: .72rem; font-weight: 500; }
+
+.warns { display: grid; gap: 10px; }
+.w { display: grid; grid-template-columns: 28px minmax(0,1fr); gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+.w .i { width: 26px; height: 26px; border-radius: 50%; background: var(--guard-bg); color: var(--guard); display: grid; place-items: center; font-weight: 700; font-size: .85rem; }
+.w b { display: block; }
+.w p { margin: 2px 0 0; font-size: .9rem; color: var(--muted); }
+
+.concepts { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; }
+.concept { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.concept p { margin: 0; font-size: .93rem; }
+.concept p.sub { font-size: .82rem; color: var(--muted); }
+.concept pre.mini { margin: 4px 0 0; }
+.c-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.c-file { font-family: var(--mono); font-size: .74rem; color: var(--muted); }
+pre.mini .n, .legend-list .n {
+  display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%;
+  background: var(--accent); color: #fff; font: 700 .68rem var(--font); margin-left: 10px; vertical-align: 1px;
+}
+.anat { display: grid; grid-template-columns: minmax(0,1.35fr) minmax(0,1fr); gap: 18px; align-items: start; }
+.anat pre.mini { margin: 0; }
+.legend-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; max-width: none; }
+.legend-list li { display: grid; grid-template-columns: 24px minmax(0,1fr); gap: 8px; margin: 0; font-size: .9rem; line-height: 1.55; }
+.legend-list .n { margin: 2px 0 0; }
+
+@media (max-width: 980px) {
+  .anat, .concepts, .routes { grid-template-columns: minmax(0,1fr); }
+  .layout { grid-template-columns: minmax(0,1fr); }
+  nav.toc { display: none; }
+  main { padding: 32px 16px 80px; }
+  .strip { grid-template-columns: repeat(4, minmax(0,1fr)); }
+  .boot, .folders { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .di { grid-template-columns: minmax(0,1fr); }
+  .arrow { transform: rotate(90deg); }
+}
+@media (max-width: 620px) {
+  h1 { font-size: 1.75rem; }
+  .g2, .g3, .folders, .boot, .shell .kids { grid-template-columns: minmax(0,1fr); }
+  .strip { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .steps li { grid-template-columns: 1fr; gap: 2px; }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<nav class="toc" aria-label="Mục lục">
+  <b>ProLaptop Admin</b>
+  <small>Kiến trúc web client</small>
+  <a href="#tong-quan">Tổng quan</a>
+  <a href="#react">Khái niệm cốt lõi</a>
+  <a href="#khoi-chay">App khởi chạy</a>
+  <a href="#man-hinh">Màn hình &amp; Router</a>
+  <a href="#thao-tac">Một thao tác đi đâu</a>
+  <a href="#luong">Các luồng chính</a>
+  <a href="#luu-y">Cần lưu ý</a>
+</nav>
+
+<main><div class="wrap">
+
+<!-- ============ TỔNG QUAN ============ -->
+<section id="tong-quan">
+  <div class="kicker">ProLaptop Client</div>
+  <h1>Trang quản trị chạy như thế nào</h1>
+  <p class="intro">Đây là web dành riêng cho <b>admin</b> của cửa hàng: xem doanh thu, quản lý sản phẩm, hãng, người dùng, đơn hàng, đánh giá và chat với khách. Khách mua hàng dùng app mobile, không dùng trang này. Viết bằng React 18 (chạy bằng Vite), giao diện dùng thư viện Ant Design, gọi server NestJS qua axios.</p>
+  <div class="facts">
+    <div class="fact"><b>localhost:5173</b>địa chỉ khi chạy <code>yarn dev</code></div>
+    <div class="fact"><b>14</b>màn hình</div>
+    <div class="fact"><b>9</b>file gọi API</div>
+    <div class="fact"><b>localhost:5003/api</b>server mà app gọi tới</div>
+  </div>
+
+  <h3>Nhìn từ xa</h3>
+  <div class="card ov">
+    <svg viewBox="0 0 900 370" role="img" aria-label="Trình duyệt chạy app React; app gọi server NestJS qua HTTP và WebSocket">
+      <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="ah"/></marker></defs>
+      <rect x="10" y="20" width="580" height="320" rx="16" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="6 5"/>
+      <text x="30" y="46" class="ov-t" style="fill:var(--accent)">Trình duyệt · app React</text>
+
+      <rect x="34" y="64" width="250" height="64" rx="10" style="fill:var(--http-bg)"/>
+      <text x="52" y="90" class="ov-t" style="fill:var(--http)">Router</text>
+      <text x="52" y="111" class="ov-s">URL nào → màn hình nào</text>
+
+      <rect x="34" y="144" width="250" height="84" rx="10" style="fill:var(--ui-bg)"/>
+      <text x="52" y="170" class="ov-t" style="fill:var(--ui)">Pages (màn hình)</text>
+      <text x="52" y="191" class="ov-s">Dashboard · Product · Order…</text>
+      <text x="52" y="211" class="ov-s">giữ dữ liệu bằng state</text>
+
+      <rect x="34" y="244" width="250" height="76" rx="10" style="fill:var(--api-bg)"/>
+      <text x="52" y="272" class="ov-t" style="fill:var(--api)">API modules + axios</text>
+      <text x="52" y="294" class="ov-s">productApi, orderApi… gọi HTTP</text>
+
+      <rect x="316" y="64" width="250" height="64" rx="10" style="fill:var(--state-bg)"/>
+      <text x="334" y="90" class="ov-t" style="fill:var(--state)">AccountContext</text>
+      <text x="334" y="111" class="ov-s">token + thông tin admin dùng chung</text>
+
+      <rect x="316" y="154" width="250" height="64" rx="10" class="ov-box"/>
+      <text x="334" y="180" class="ov-t">localStorage</text>
+      <text x="334" y="201" class="ov-s">giữ token qua các lần mở lại</text>
+
+      <rect x="316" y="244" width="250" height="76" rx="10" style="fill:var(--hand-bg)"/>
+      <text x="334" y="272" class="ov-t" style="fill:var(--hand)">socket.js</text>
+      <text x="334" y="294" class="ov-s">nhận tin chat theo thời gian thực</text>
+
+      <rect x="670" y="150" width="210" height="110" rx="14" style="fill:var(--srv-bg)"/>
+      <text x="775" y="190" text-anchor="middle" class="ov-t" style="fill:var(--srv)">Server NestJS</text>
+      <text x="775" y="212" text-anchor="middle" class="ov-s">localhost:5003</text>
+      <text x="775" y="232" text-anchor="middle" class="ov-s">/api + WebSocket</text>
+
+      <path d="M159,128 L159,142" class="ov-a" marker-end="url(#ah)"/>
+      <path d="M159,228 L159,242" class="ov-a" marker-end="url(#ah)"/>
+      <path d="M284,176 C300,176 300,96 314,96" class="ov-ad" marker-end="url(#ah)"/>
+      <path d="M441,128 L441,152" class="ov-ad" marker-end="url(#ah)"/>
+      <path d="M284,300 H300 V350 H775 V264" class="ov-a" marker-end="url(#ah)"/>
+      <text x="700" y="344" class="ov-s" text-anchor="middle">HTTP</text>
+      <path d="M566,250 H666" class="ov-ad" marker-end="url(#ah)"/>
+      <text x="630" y="242" class="ov-s" text-anchor="middle">WebSocket</text>
+    </svg>
+  </div>
+  <p class="caption">Router chọn màn hình theo URL. Màn hình gọi file API, file API dùng axios gửi HTTP tới server. Nét đứt: đọc/ghi dữ liệu dùng chung và kênh WebSocket cho chat.</p>
+
+  <h3>Code nằm ở đâu</h3>
+  <div class="folders">
+    <div class="folder"><code>src/main.jsx</code><p>Điểm bắt đầu. Gắn app vào trang HTML, bọc các provider.</p></div>
+    <div class="folder"><code>view/routers/</code><p>Bảng URL → màn hình (<code>Router.jsx</code>).</p></div>
+    <div class="folder"><code>view/pages/</code><p>Mỗi thư mục là một màn hình: <code>login</code>, <code>management/product</code>…</p></div>
+    <div class="folder"><code>layout/</code><p>Khung admin: menu trái, header, chỗ hiện màn hình con.</p></div>
+    <div class="folder"><code>api/</code><p><code>axiosClient</code> và mỗi file một nhóm API: <code>productApi</code>, <code>orderApi</code>…</p></div>
+    <div class="folder"><code>context/</code> · <code>hooks/</code><p>Dữ liệu đăng nhập dùng chung; kết nối socket.</p></div>
+  </div>
+</section>
+
+<!-- ============ REACT ============ -->
+<section id="react">
+  <div class="kicker">Khái niệm cốt lõi</div>
+  <h2>Các khái niệm cốt lõi của React</h2>
+  <p class="intro">Tám khái niệm dưới đây có mặt ở hầu hết file trong project. Đọc theo thứ tự: mỗi khái niệm dựa trên khái niệm trước.</p>
+
+  <div class="concepts">
+    <div class="card concept">
+      <div class="c-head"><span class="chip c-ui">Component</span><span class="c-file">errorPage.jsx</span></div>
+      <p>Một <b>hàm trả về giao diện</b>. Mỗi màn hình, mỗi khung, mỗi nút tự viết đều là component. Tên viết hoa chữ cái đầu và được dùng như một thẻ HTML: <code>&lt;Review /&gt;</code>.</p>
+<pre class="mini"><em>export default function</em> ErrorPage() {
+  <em>return</em> &lt;<u>Result</u> status=<s>"403"</s> title=<s>"403"</s> /&gt;;
+}</pre>
+    </div>
+    <div class="card concept">
+      <div class="c-head"><span class="chip c-ui">JSX</span><span class="c-file">*.jsx</span></div>
+      <p>Cú pháp <b>viết HTML ngay trong JavaScript</b>. Trong ngoặc nhọn <code>{ }</code> là biểu thức JS. Thẻ viết thường (<code>div</code>, <code>h1</code>) là HTML, thẻ viết hoa (<code>Table</code>, <code>Button</code>) là component.</p>
+<pre class="mini">&lt;<u>h1</u>&gt;Review Management&lt;/<u>h1</u>&gt;
+&lt;<u>Table</u> dataSource={filteredReviews} /&gt;</pre>
+    </div>
+    <div class="card concept">
+      <div class="c-head"><span class="chip c-hand">Props</span><span class="c-file">listMess.jsx → chat.jsx</span></div>
+      <p>Dữ liệu <b>cha truyền xuống con</b>, giống tham số của hàm. Con chỉ đọc, không sửa props. Muốn con báo ngược lên cha thì truyền một hàm qua props.</p>
+<pre class="mini"><i>// cha</i>
+&lt;<u>Chat</u> userId={selectedUser} onClose={handleClose} /&gt;
+<i>// con</i>
+<em>function</em> Chat({ userId, onClose }) { ... }</pre>
+    </div>
+    <div class="card concept">
+      <div class="c-head"><span class="chip c-state">State</span><span class="c-file">useState</span></div>
+      <p>Dữ liệu <b>component tự giữ và có thể thay đổi</b>: danh sách đang hiển thị, ô tìm kiếm, đang loading… Gọi hàm <code>set…</code> để đổi state, React sẽ <b>vẽ lại</b> component với giá trị mới.</p>
+<pre class="mini"><em>const</em> [reviews, setReviews] = useState([]);
+setReviews(data); <i>// → giao diện tự cập nhật</i></pre>
+    </div>
+    <div class="card concept">
+      <div class="c-head"><span class="chip c-api">Effect</span><span class="c-file">useEffect</span></div>
+      <p>Đoạn code <b>chạy sau khi giao diện đã vẽ</b>, dùng cho việc ngoài giao diện: gọi API, kết nối socket, đọc localStorage. Mảng cuối (<code>[]</code>) quyết định khi nào chạy lại.</p>
+<pre class="mini">useEffect(() =&gt; { fetchReviews(); }, []);
+<i>// [] = chỉ chạy 1 lần khi màn hình mở</i>
+<i>// [search] = chạy lại mỗi khi search đổi</i></pre>
+    </div>
+    <div class="card concept">
+      <div class="c-head"><span class="chip c-hand">Hook</span><span class="c-file">hooks/adminAuth.jsx</span></div>
+      <p>Hàm bắt đầu bằng <code>use…</code>, cho component "móc" vào tính năng của React. <code>useState</code>, <code>useEffect</code> là hook có sẵn. Có thể tự viết hook để dùng lại logic, ví dụ <code>useAuth()</code>.</p>
+<pre class="mini"><em>const</em> useAuth = () =&gt; useContext(AccountContext);</pre>
+      <p class="sub">Luật: chỉ gọi hook ở đầu component, không gọi trong if hay vòng lặp.</p>
+    </div>
+    <div class="card concept">
+      <div class="c-head"><span class="chip c-state">Context</span><span class="c-file">context/accountContext.jsx</span></div>
+      <p>Kho dữ liệu <b>dùng chung cho cả cây component</b>, khỏi phải truyền props qua từng tầng. Provider bọc ngoài cùng; component nào cần thì đọc bằng <code>useContext</code>.</p>
+<pre class="mini">&lt;<u>AccountContext.Provider</u> value={{ token, account }}&gt;
+  {children}
+&lt;/<u>AccountContext.Provider</u>&gt;
+<i>// ở bất kỳ đâu bên trong:</i>
+<em>const</em> { account } = useContext(AccountContext);</pre>
+    </div>
+    <div class="card concept">
+      <div class="c-head"><span class="chip c-http">Router</span><span class="c-file">view/routers/Router.jsx</span></div>
+      <p>Thư viện <b>react-router-dom</b> đọc URL trên thanh địa chỉ và chọn component để hiện, không tải lại trang. Chuyển màn hình bằng <code>navigate('/admin/orders')</code>.</p>
+<pre class="mini">{ path: <s>'/admin'</s>, element: &lt;<u>AdminLayout</u> /&gt;,
+  children: [{ path: <s>'orders'</s>, element: &lt;<u>Order</u> /&gt; }] }</pre>
+    </div>
+  </div>
+
+  <h3>Vòng đời một component (Component Lifecycle)</h3>
+  <p>Mỗi component trải qua các giai đoạn dưới đây. Giai đoạn <b>Update</b> lặp lại mỗi lần state, props hoặc context thay đổi.</p>
+  <div class="card">
+    <div class="di">
+      <div class="box c-ui"><b>Mount</b><span>component xuất hiện lần đầu</span></div>
+      <div class="arrow">→</div>
+      <div class="box c-ui"><b>Render</b><span>chạy hàm, tính ra JSX</span></div>
+      <div class="arrow">→</div>
+      <div class="box c-api"><b>Effect</b><span>useEffect chạy: gọi API…</span></div>
+      <div class="arrow">→</div>
+      <div class="box c-state"><b>Update</b><span>setState → quay lại Render</span></div>
+    </div>
+    <p class="caption" style="margin-top:14px">Khi rời màn hình, component <b>Unmount</b>: hàm dọn dẹp trả về từ <code>useEffect</code> chạy (ví dụ tắt socket).</p>
+  </div>
+
+  <h3>Cấu trúc một màn hình (Page)</h3>
+  <div class="anat">
+<pre class="mini code"><em>import</em> { Table, message } <em>from</em> <s>'antd'</s>;<span class="n">1</span>
+<em>import</em> reviewApi <em>from</em> <s>'../../../../api/reviewApi'</s>;
+
+<em>export default function</em> Review() {
+  <em>const</em> [reviews, setReviews] = useState([]);<span class="n">2</span>
+  <em>const</em> [loading, setLoading] = useState(<em>true</em>);
+
+  useEffect(() =&gt; {<span class="n">3</span>
+    <em>const</em> fetchReviews = <em>async</em> () =&gt; {
+      <em>const</em> res = <em>await</em> reviewApi.getReview();
+      setReviews(res.data.data);
+      setLoading(<em>false</em>);
+    };
+    fetchReviews();
+  }, []);
+
+  <em>const</em> handleDelete = <em>async</em> (id) =&gt; {<span class="n">4</span>
+    <em>await</em> reviewApi.deleteReview(id);
+    setReviews(reviews.filter(r =&gt; r.id !== id));
+    message.success(<s>'Review deleted successfully!'</s>);
+  };
+
+  <em>return</em> (<span class="n">5</span>
+    &lt;<u>Table</u> columns={columns}
+      dataSource={reviews} loading={loading} /&gt;
+  );
+}</pre>
+    <ol class="legend-list">
+      <li><span class="n">1</span><div><b>Import</b> component giao diện từ Ant Design và file API cần gọi.</div></li>
+      <li><span class="n">2</span><div><b>State</b> giữ dữ liệu màn hình: danh sách, cờ loading.</div></li>
+      <li><span class="n">3</span><div><b>Effect tải dữ liệu</b> khi màn hình mở: gọi API rồi đưa kết quả vào state.</div></li>
+      <li><span class="n">4</span><div><b>Handler</b> chạy khi người dùng bấm nút: gọi API, cập nhật state, báo kết quả.</div></li>
+      <li><span class="n">5</span><div><b>JSX</b> mô tả giao diện từ state. State đổi → phần này tự vẽ lại.</div></li>
+    </ol>
+  </div>
+  <p class="caption">Rút gọn từ <code>src/view/pages/management/review/review.jsx</code>. Mọi màn hình quản lý (product, category, user, order) đều theo đúng khuôn này.</p>
+
+  <h3>Cấu trúc một file API</h3>
+  <div class="anat">
+<pre class="mini code"><i>// api/axiosClient.jsx</i>
+<em>const</em> axiosClient = {
+  application: axios.create({ baseURL: API_URL }),<span class="n">1</span>
+  applicationNoAuth: axios.create({ baseURL: API_URL }),
+  formData: axios.create({ baseURL: API_URL,
+    headers: { <s>'content-type'</s>: <s>'multipart/form-data'</s> } }),
+};
+
+<i>// api/reviewApi.jsx</i>
+<em>const</em> reviewApi = {<span class="n">2</span>
+  getReview: <em>async</em> () =&gt;
+    axiosClient.applicationNoAuth.get(<s>'/review'</s>),<span class="n">3</span>
+  deleteReview: <em>async</em> (id) =&gt;
+    axiosClient.applicationNoAuth.delete(<s>`/review/${id}`</s>),
+};</pre>
+    <ol class="legend-list">
+      <li><span class="n">1</span><div><b>Ba bản axios dựng sẵn</b>, cùng gốc <code>http://localhost:5003/api</code>. <code>application</code> là bản duy nhất được gắn token; <code>formData</code> dùng khi gửi kèm ảnh.</div></li>
+      <li><span class="n">2</span><div><b>Mỗi file một nhóm API</b>, mỗi hàm một endpoint. Màn hình chỉ gọi hàm, không cần biết URL.</div></li>
+      <li><span class="n">3</span><div><b>Gửi request</b>: <code>.get('/review')</code> = <code>GET /api/review</code>. Kết quả trả về là Promise, dùng <code>await</code> để chờ.</div></li>
+    </ol>
+  </div>
+
+  <h3>Mỗi phần nằm ở file nào trong project</h3>
+  <div class="card" style="padding:6px 8px">
+    <div class="tw"><table>
+      <tr><th>Phần</th><th>Nằm ở</th><th>Ghi chú</th></tr>
+      <tr><td><span class="chip c-ui">Component / Page</span></td><td><code>view/pages/**/*.jsx</code>, <code>layout/layout.jsx</code></td><td>Không có thư mục component dùng chung; giao diện lấy từ Ant Design</td></tr>
+      <tr><td><span class="chip c-http">Router</span></td><td><code>view/routers/Router.jsx</code></td><td><code>createBrowserRouter</code>, nạp ở <code>main.jsx</code></td></tr>
+      <tr><td><span class="chip c-guard">Chặn chưa đăng nhập</span></td><td><code>layout/layout.jsx</code>: <code>useEffect</code> thấy không có token → <code>navigate('/error')</code></td><td>Không phải component guard riêng; không kiểm tra role</td></tr>
+      <tr><td><span class="chip c-guard">Kiểm tra role admin</span></td><td><code>view/pages/login/login.jsx</code></td><td>Chỉ kiểm tra một lần lúc đăng nhập</td></tr>
+      <tr><td><span class="chip c-state">Context</span></td><td><code>context/accountContext.jsx</code> → <code>AuthProvider</code></td><td>Đọc bằng <code>useContext(AccountContext)</code> hoặc <code>useAuth()</code></td></tr>
+      <tr><td><span class="chip c-api">Gọi API</span></td><td><code>api/axiosClient.jsx</code> + <code>api/*Api.jsx</code></td><td>Không có interceptor; URL gốc ở <code>config/env.js</code></td></tr>
+      <tr><td><span class="chip c-hand">Socket</span></td><td><code>hooks/socket.js</code></td><td>Dùng ở màn hình chat</td></tr>
+    </table></div>
+  </div>
+</section>
+
+<!-- ============ KHỞI CHẠY ============ -->
+<section id="khoi-chay">
+  <div class="kicker">Khởi chạy</div>
+  <h2>Từ <code>yarn dev</code> tới lúc thấy màn hình</h2>
+  <p class="intro">Vite phục vụ <code>index.html</code>; trang này nạp <code>src/main.jsx</code> và React lo phần còn lại.</p>
+  <ol class="boot">
+    <li><div class="n">1</div><b>Vite mở trang</b><p>Trình duyệt tải <code>index.html</code>, trong đó có một thẻ rỗng <code>&lt;div id="root"&gt;</code>.</p><div class="f">index.html</div></li>
+    <li><div class="n">2</div><b>Nạp main.jsx</b><p><code>createRoot(#root).render(...)</code>: React bắt đầu vẽ vào thẻ rỗng đó.</p><div class="f">src/main.jsx</div></li>
+    <li><div class="n">3</div><b>Dựng các provider</b><p>Bọc app trong các lớp dữ liệu dùng chung (xem sơ đồ bên dưới).</p><div class="f">src/main.jsx</div></li>
+    <li><div class="n">4</div><b>Đọc lại phiên đăng nhập</b><p><code>AuthProvider</code> lấy <code>token</code>, <code>account</code> từ localStorage; có token thì gắn vào axios.</p><div class="f">context/accountContext.jsx</div></li>
+    <li><div class="n">5</div><b>Router khớp URL</b><p><code>/</code> → Login, <code>/admin/…</code> → khung admin + màn hình con.</p><div class="f">view/routers/Router.jsx</div></li>
+    <li><div class="n">6</div><b>Màn hình mở, tải dữ liệu</b><p>Khung admin kiểm tra token, màn hình con chạy <code>useEffect</code> gọi API.</p><div class="f">layout.jsx · pages/*</div></li>
+  </ol>
+
+  <h3>Thứ tự các lớp bọc trong main.jsx</h3>
+  <div class="nest" style="border-color:var(--muted)">
+    <div class="lbl">QueryClientProvider <span>React Query, đã cài nhưng chưa màn hình nào dùng</span></div>
+    <div class="nest" style="border-color:var(--state);background:var(--state-bg)">
+      <div class="lbl" style="color:var(--state)">AuthProvider <span>cấp token + account qua AccountContext</span></div>
+      <div class="nest" style="border-color:var(--muted);background:var(--surface)">
+        <div class="lbl">Suspense <span>hiện "Loading..." khi chờ; hiện không có gì cần chờ</span></div>
+        <div class="nest" style="border-color:var(--http);background:var(--http-bg)">
+          <div class="lbl" style="color:var(--http)">RouterProvider <span>chọn màn hình theo URL</span></div>
+          <div class="box c-ui" style="background:var(--surface)"><b>LoginPage · AdminLayout → DashBoard / Product / Order …</b><span>mọi màn hình nằm trong cùng, nên đều đọc được AccountContext</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="caption">Provider nào bọc ngoài thì component bên trong mới dùng được nó. Vì vậy <code>AuthProvider</code> phải nằm ngoài <code>RouterProvider</code>.</p>
+</section>
+
+<!-- ============ MÀN HÌNH ============ -->
+<section id="man-hinh">
+  <div class="kicker">Màn hình &amp; Router</div>
+  <h2>14 màn hình và cách chúng được chọn</h2>
+  <p class="intro">Các màn hình chia hai nhóm: nhóm mở tự do (đăng nhập, quên mật khẩu) và nhóm nằm trong khung admin. Khung admin là một component cha; màn hình con hiện ở chỗ <code>&lt;Outlet /&gt;</code> của nó.</p>
+  <div class="routes">
+    <div class="rt-group">
+      <div class="rt-h">Mở tự do</div>
+      <div class="rt"><code>/</code><span>Đăng nhập</span></div>
+      <div class="rt"><code>/forgotPassword</code><span>Nhập email xin OTP</span></div>
+      <div class="rt"><code>/checkToken</code><span>Nhập mã OTP 4 số</span></div>
+      <div class="rt"><code>/changePassword</code><span>Đặt mật khẩu mới</span></div>
+      <div class="rt"><code>/error</code><span>Trang 403</span></div>
+    </div>
+    <div class="shell">
+      <div class="top">/admin · AdminLayout</div>
+      <p class="sub">Menu trái + header. Không có token → chuyển sang <code>/error</code>.</p>
+      <div class="kids">
+        <div class="rt"><code>dashboard</code><span>Doanh thu, thống kê</span></div>
+        <div class="rt"><code>products</code><span>Sản phẩm</span></div>
+        <div class="rt"><code>categories</code><span>Hãng laptop</span></div>
+        <div class="rt"><code>users</code><span>Khoá / mở user</span></div>
+        <div class="rt"><code>orders</code><span>Đổi trạng thái đơn</span></div>
+        <div class="rt"><code>reviews</code><span>Xoá đánh giá</span></div>
+        <div class="rt"><code>listMess</code><span>Danh sách chat</span></div>
+        <div class="rt"><code>chat</code><span>Khung chat (ẩn khỏi menu)</span></div>
+        <div class="rt"><code>profile</code><span>Hồ sơ admin</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="note warn"><p>Việc chặn chạy trong <code>useEffect</code> của khung admin, tức là <b>sau</b> khi màn hình con đã vẽ. Vì vậy khi chưa đăng nhập, màn hình con vẫn kịp gọi API một lần rồi mới bị chuyển sang <code>/error</code>.</p></div>
+</section>
+
+<!-- ============ THAO TÁC ============ -->
+<section id="thao-tac">
+  <div class="kicker">Vòng đời một thao tác</div>
+  <h2>Một cú bấm đi qua những đâu</h2>
+  <p class="intro">Chọn một ví dụ. Mỗi thao tác của admin đi qua cùng một chuỗi bước, từ giao diện tới server rồi quay về giao diện. Bước sáng là bước được chạy, bước mờ là bị bỏ qua.</p>
+  <div class="tabs" role="tablist" id="reqTabs"></div>
+  <div class="card">
+    <div class="req" id="reqLine"></div>
+    <div class="strip" id="reqStrip"></div>
+    <ol class="steps" id="reqSteps"></ol>
+    <div class="result" id="reqResult"></div>
+  </div>
+  <div class="note"><p>Chuỗi này giống <b>Request Lifecycle</b> bên server, nhưng nhìn từ phía trình duyệt: bước <span class="chip c-srv">Server</span> chính là toàn bộ Middleware → Guard → Pipe → Controller → Service → Database đã mô tả trong tài liệu server.</p></div>
+</section>
+
+<!-- ============ LUỒNG ============ -->
+<section id="luong">
+  <div class="kicker">Các luồng chính</div>
+  <h2>Từng tính năng chạy ra sao</h2>
+  <p class="intro">Sắp theo thứ tự admin thường dùng: đăng nhập trước, rồi xem tổng quan, rồi quản lý từng loại dữ liệu. Mọi URL có tiền tố <code>/api</code>. Sơ đồ đọc từ trên xuống theo thời gian.</p>
+  <div class="tabs" role="tablist" id="flowTabs"></div>
+  <div class="card" id="flowPanel"></div>
+</section>
+
+<!-- ============ LƯU Ý ============ -->
+<section id="luu-y">
+  <div class="kicker">Cần lưu ý</div>
+  <h2>Những điểm nên biết trước khi sửa code</h2>
+  <div class="warns">
+    <div class="w"><div class="i">1</div><div><b>File <code>src/.env</code> không được đọc</b><p>Vite chỉ đọc <code>.env</code> ở thư mục gốc <code>ProLaptop-client/</code>. App vẫn chạy nhờ giá trị mặc định <code>http://localhost:5003</code> trong <code>config/env.js</code>; muốn đổi server thì tạo <code>.env.development</code> / <code>.env.production</code> ở thư mục gốc.</p></div></div>
+    <div class="w"><div class="i">2</div><div><b>Token gần như không được gửi lên</b><p>Hầu hết file API dùng <code>applicationNoAuth</code> hoặc <code>formData</code>, không kèm token. Đăng nhập cũng không gọi <code>setToken</code>, nên token chỉ được gắn vào axios sau khi tải lại trang.</p></div></div>
+    <div class="w"><div class="i">3</div><div><b>Chỉ chặn ở giao diện</b><p>Khung admin chỉ kiểm tra "có token hay không", không kiểm tra role hay hạn token, cũng không xử lý lỗi 401. Server cũng không bảo vệ các route admin, nên ai biết URL vẫn gọi được.</p></div></div>
+    <div class="w"><div class="i">4</div><div><b>localStorage lưu cả mật khẩu đã mã hoá</b><p><code>account</code> là toàn bộ response đăng nhập, gồm cả trường <code>password</code>. Sửa hồ sơ chỉ cập nhật context, không cập nhật localStorage, nên tải lại trang sẽ thấy thông tin cũ.</p></div></div>
+    <div class="w"><div class="i">5</div><div><b>Chat còn nhiều lỗi</b><p>ID admin ghi cứng trong <code>chat.jsx</code> và <code>messagesApi.jsx</code>. Tin admin đã gửi bị lọc mất khi tải lịch sử. Tin mới không lọc theo người đang chat. Đóng khung chat ngắt luôn socket của danh sách chat.</p></div></div>
+    <div class="w"><div class="i">6</div><div><b>Code thừa</b><p>React Query đã bọc nhưng không dùng, <code>loginGgApi</code> không ai gọi, modal "Add User" không bao giờ mở, <code>index.css</code> và <code>src/assets/</code> không được import.</p></div></div>
+  </div>
+
+  <details class="more">
+    <summary>Danh sách API mà client gọi</summary>
+    <div class="tw"><table id="apiTable"></table></div>
+  </details>
+</section>
+
+</div></main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>
+(function () {
+'use strict';
+var $ = function (s) { return document.querySelector(s); };
+function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+/* ---------- action examples ---------- */
+var LAYERS = [['ui', 'Giao diện'], ['hand', 'Handler'], ['api', 'File API'], ['http', 'Axios'], ['srv', 'Server'], ['state', 'setState'], ['ui2', 'Vẽ lại']];
+var CLS = { ui2: 'ui' };
+var REQ = [
+  { name: 'Đăng nhập', line: 'Bấm "Login" ở trang /  →  POST /api/auth/login',
+    s: { ui: 'Form có ô username, password và nút Login.', hand: 'handleLogin đọc 2 ô nhập.', api: 'authApi.adminLogin({ userName, password }).', http: 'applicationNoAuth gửi JSON tới server.', srv: 'Kiểm tra mật khẩu, trả access_token + thông tin user.', state: 'Role là admin → lưu token, account vào localStorage, setAccount.', ui2: 'navigate("/admin/dashboard"): đổi sang màn hình dashboard.' },
+    res: ['ok', 'Vào trang quản trị'] },
+  { name: 'Xoá đánh giá', line: 'Bấm biểu tượng xoá ở /admin/reviews  →  DELETE /api/review/:id',
+    s: { ui: 'Bảng đánh giá, mỗi dòng có nút xoá và hộp xác nhận.', hand: 'handleDelete(id) chạy sau khi bấm xác nhận.', api: 'reviewApi.deleteReview(id).', http: 'applicationNoAuth gửi DELETE.', srv: 'Xoá mềm dòng review.', state: 'setReviews(bỏ dòng vừa xoá).', ui2: 'Bảng mất một dòng, hiện thông báo thành công.' },
+    res: ['ok', 'Dòng biến mất mà không cần tải lại trang'] },
+  { name: 'Thêm sản phẩm có ảnh', line: 'Điền form trong modal ở /admin/products  →  POST /api/product (form-data)',
+    s: { ui: 'Modal có các ô tên, giá, hãng, cấu hình và chỗ chọn ảnh.', hand: 'handleCreateProduct gom các ô vào một FormData.', api: 'productApi.createProduct(formData).', http: 'Bản formData gửi multipart/form-data.', srv: 'Upload ảnh lên Cloudinary, lưu product.', state: 'Thêm sản phẩm mới vào state danh sách, đóng modal.', ui2: 'Bảng có thêm một dòng.' },
+    res: ['ok', 'Sản phẩm mới xuất hiện trong bảng'] },
+  { name: 'Đổi trạng thái đơn', line: 'Chọn trạng thái trong ô Select ở /admin/orders  →  PATCH /api/order/:id',
+    s: { ui: 'Mỗi đơn có ô chọn Pending / Delivering / Success / Cancelled.', hand: 'Hàm onChange của Select nhận trạng thái mới.', api: 'orderApi.updateOrder(id, { statusDelivery }).', http: 'Gửi PATCH dạng JSON.', srv: 'Cập nhật cột statusDelivery của đơn.', state: 'Sửa đúng đơn đó trong state.', ui2: 'Ô Select hiện trạng thái mới.' },
+    res: ['ok', 'Khách thấy trạng thái mới trên app mobile'] },
+  { name: 'Sai mật khẩu', line: 'Bấm "Login" với mật khẩu sai  →  POST /api/auth/login',
+    s: { ui: 'Form đăng nhập.', hand: 'handleLogin gọi API trong try/catch.', api: 'authApi.adminLogin(...).', http: 'Server trả 401, axios ném lỗi.', srv: 'Không khớp mật khẩu → 401 Unauthorized.', state: 'Khối catch: setError("...") với thông báo lỗi.', ui2: 'Dòng chữ đỏ hiện dưới form.' },
+    res: ['bad', 'Ở lại trang đăng nhập, hiện lỗi'] },
+  { name: 'Tài khoản khách đăng nhập', line: 'Đăng nhập bằng user có role = user  →  POST /api/auth/login',
+    s: { ui: 'Form đăng nhập.', hand: 'handleLogin nhận response thành công nhưng thấy role khác admin.', api: 'authApi.adminLogin(...).', http: 'Server trả 201 bình thường.', srv: 'Mật khẩu đúng, trả token.', state: 'Không lưu token, chỉ setError("You do not have permission...").' }, stop: 'state',
+    res: ['bad', 'Không vào được trang quản trị'] }
+];
+var reqTabs = $('#reqTabs');
+reqTabs.innerHTML = REQ.map(function (r, i) { return '<button type="button" role="tab" data-i="' + i + '">' + esc(r.name) + '</button>'; }).join('');
+function showReq(i) {
+  var r = REQ[i];
+  Array.prototype.forEach.call(reqTabs.children, function (b, j) { b.setAttribute('aria-selected', j === i ? 'true' : 'false'); });
+  $('#reqLine').textContent = r.line;
+  var stopIdx = r.stop ? LAYERS.map(function (l) { return l[0]; }).indexOf(r.stop) : 99;
+  $('#reqStrip').innerHTML = LAYERS.map(function (l, k) {
+    var c = CLS[l[0]] || l[0];
+    var cls = 'layer c-' + c;
+    if (k > stopIdx) cls += ' after';
+    else if (!r.s[l[0]]) cls += ' skip';
+    if (k === stopIdx) cls += ' stop';
+    var sub = k > stopIdx ? 'không tới' : (r.s[l[0]] ? (k === stopIdx ? 'dừng tại đây' : 'chạy') : 'bỏ qua');
+    return '<div class="' + cls + '"><b>' + l[1] + '</b><span>' + sub + '</span></div>';
+  }).join('');
+  $('#reqSteps').innerHTML = LAYERS.filter(function (l) { return r.s[l[0]]; }).map(function (l) {
+    return '<li><span class="chip c-' + (CLS[l[0]] || l[0]) + '">' + l[1] + '</span><span>' + esc(r.s[l[0]]) + '</span></li>';
+  }).join('');
+  var res = $('#reqResult');
+  res.className = 'result ' + r.res[0];
+  res.textContent = '→ ' + r.res[1];
+}
+reqTabs.addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) showReq(+b.dataset.i); });
+showReq(1);
+
+/* ---------- flows ---------- */
+var FLOWS = [
+  { name: 'Đăng nhập', api: 'POST /auth/login', where: 'view/pages/login/login.jsx',
+    desc: 'Admin nhập username và mật khẩu. Server trả token; client chỉ cho vào nếu role là admin.',
+    chain: [['ui', 'LoginPage'], ['api', 'authApi'], ['srv', 'POST /auth/login'], ['state', 'localStorage + setAccount'], ['http', 'navigate']],
+    mmd: 'sequenceDiagram\n  participant A as Admin\n  participant P as LoginPage\n  participant S as Server\n  participant L as localStorage\n  A->>P: nhập username, mật khẩu, bấm Login\n  P->>S: POST /auth/login\n  S-->>P: access_token, role, thông tin user\n  alt role khác admin\n    P-->>A: báo không có quyền\n  else role = admin\n    P->>L: lưu token và account\n    P->>P: setAccount(...)\n    P-->>A: chuyển sang /admin/dashboard\n  end',
+    notes: ['Lần mở trang sau, AuthProvider đọc lại token từ localStorage nên không phải đăng nhập lại.', 'Đăng xuất: localStorage.clear() rồi về trang /.'] },
+  { name: 'Quên mật khẩu', api: 'POST /auth/request-password-reset', where: 'pages/changePassword/*',
+    desc: 'Ba màn hình nối nhau, email được chuyền qua state của router.',
+    chain: [['ui', 'ForgotPassword'], ['ui', 'CheckToken'], ['ui', 'ChangePassword'], ['api', 'mailApi'], ['srv', '/auth/*']],
+    mmd: 'sequenceDiagram\n  participant A as Admin\n  participant C as Client\n  participant S as Server\n  A->>C: /forgotPassword, nhập email\n  C->>S: POST /auth/request-password-reset\n  S-->>A: gửi OTP 4 số qua Gmail\n  C->>C: navigate /checkToken, kèm email\n  A->>C: nhập OTP\n  C->>S: POST /auth/verify-otp\n  C->>C: navigate /changePassword, kèm email\n  A->>C: nhập mật khẩu mới\n  C->>S: POST /auth/reset-password\n  C-->>A: quay về trang đăng nhập',
+    notes: ['Email chỉ nằm trong state của router: tải lại trang giữa chừng là mất, phải làm lại từ đầu.'] },
+  { name: 'Dashboard', api: 'GET /order/daily-success-weekly …', where: 'management/dashBoard/dashBoard.jsx',
+    desc: 'Màn hình đầu tiên sau khi đăng nhập. Ba useEffect cùng chạy khi mở màn hình, mỗi cái tải một phần.',
+    chain: [['api', 'orderApi · userApi · categoryApi · reviewApi'], ['srv', '6 endpoint'], ['state', 'setState'], ['ui', 'Statistic · LineChart · PieChart']],
+    mmd: 'sequenceDiagram\n  participant D as DashBoard\n  participant S as Server\n  par doanh thu 7 ngày\n    D->>S: GET /order/daily-success-weekly\n    S-->>D: doanh thu từng ngày\n  and 4 thẻ thống kê\n    D->>S: GET /user/count, /category/count, /review/count, /order/total-success\n    S-->>D: các con số\n  and biểu đồ tròn\n    D->>S: GET /category/product-count\n    S-->>D: số sản phẩm mỗi hãng\n  end\n  D->>D: setState, vẽ thẻ và biểu đồ (recharts)',
+    notes: ['4 thẻ thống kê được tải cùng lúc bằng Promise.all.'] },
+  { name: 'Sản phẩm', api: 'GET · POST · PATCH · DELETE /product', where: 'management/product/product.jsx',
+    desc: 'Bảng sản phẩm có tìm kiếm, thêm, sửa, xoá. Thêm và sửa mở cùng một modal, gửi dạng form-data vì có ảnh.',
+    chain: [['ui', 'Product'], ['hand', 'handleCreate / Update / Delete'], ['api', 'productApi'], ['http', 'formData'], ['srv', '/product']],
+    mmd: 'sequenceDiagram\n  participant A as Admin\n  participant P as Product\n  participant S as Server\n  P->>S: GET /product và GET /category (khi mở)\n  S-->>P: danh sách, đưa vào state\n  A->>P: gõ ô tìm kiếm\n  P->>P: lọc ngay trên state, không gọi server\n  A->>P: bấm Add, điền modal, chọn ảnh\n  P->>S: POST /product (form-data)\n  S-->>P: sản phẩm mới, thêm vào state\n  A->>P: bấm xoá, xác nhận\n  P->>S: DELETE /product/:id\n  P->>P: bỏ dòng khỏi state',
+    notes: ['Hãng (categories) có màn hình riêng nhưng chạy đúng khuôn này: GET · POST · PATCH · DELETE /category.', 'Tìm kiếm chỉ lọc dữ liệu đã tải, không dùng ?search của server.'] },
+  { name: 'Người dùng', api: 'GET /user · POST /user/block/:id', where: 'management/user/user.jsx',
+    desc: 'Xem danh sách khách hàng và khoá hoặc mở khoá tài khoản.',
+    chain: [['ui', 'UserManagement'], ['ui', 'Modal.confirm'], ['api', 'userApi.blockUser'], ['srv', '/user/block/:id'], ['state', 'đảo isBlock']],
+    mmd: 'sequenceDiagram\n  participant A as Admin\n  participant P as UserManagement\n  participant S as Server\n  P->>S: GET /user (khi mở)\n  S-->>P: danh sách user\n  A->>P: bấm Block\n  P-->>A: hộp xác nhận\n  A->>P: đồng ý\n  P->>S: POST /user/block/:id { isBlock }\n  P->>P: đảo isBlock của user đó trong state',
+    notes: ['User bị khoá sẽ không đăng nhập được trên app mobile.'] },
+  { name: 'Đơn hàng', api: 'GET /admin/order · PATCH /order/:id', where: 'management/order/order.jsx',
+    desc: 'Xem mọi đơn của mọi khách và đổi trạng thái giao hàng.',
+    chain: [['ui', 'Order'], ['ui', 'Select trạng thái'], ['api', 'orderApi'], ['srv', 'PATCH /order/:id'], ['state', 'setOrders']],
+    mmd: 'sequenceDiagram\n  participant A as Admin\n  participant P as Order\n  participant S as Server\n  P->>S: GET /admin/order (khi mở)\n  S-->>P: mọi đơn kèm chi tiết\n  A->>P: chọn Delivering\n  P->>S: PATCH /order/:id { statusDelivery }\n  S-->>P: 200\n  P->>P: cập nhật đơn trong state',
+    notes: ['Bốn trạng thái: Pending → Delivering → Success, hoặc Cancelled.', 'Doanh thu trên dashboard chỉ tính đơn Success.'] },
+  { name: 'Đánh giá', api: 'GET /review · DELETE /review/:id', where: 'management/review/review.jsx',
+    desc: 'Khách viết đánh giá trên app mobile; admin ở đây chỉ xem và xoá.',
+    chain: [['ui', 'Review'], ['api', 'reviewApi'], ['srv', '/review'], ['state', 'setReviews']],
+    mmd: 'sequenceDiagram\n  participant A as Admin\n  participant P as Review\n  participant S as Server\n  P->>S: GET /review (khi mở)\n  S-->>P: danh sách đánh giá\n  A->>P: bấm xoá, xác nhận\n  P->>S: DELETE /review/:id\n  P->>P: bỏ dòng khỏi state',
+    notes: ['Đây là màn hình đơn giản nhất, nên được dùng làm ví dụ ở phần "Cấu trúc một màn hình".'] },
+  { name: 'Chat với khách', api: 'GET /messages · WebSocket', where: 'management/chat/listMess.jsx · chat.jsx',
+    desc: 'REST để tải lịch sử, WebSocket để nhận tin mới ngay lập tức. Khách chat từ app mobile.',
+    chain: [['ui', 'ChatList'], ['hand', 'socket.js'], ['ui', 'Chat (modal)'], ['api', 'messagesApi'], ['srv', '/messages + gateway']],
+    mmd: 'sequenceDiagram\n  participant A as Admin\n  participant L as ChatList\n  participant C as Chat modal\n  participant S as Server\n  L->>S: GET /messages (danh sách hội thoại)\n  L->>S: mở socket\n  S-->>L: receive_message khi khách gửi tin\n  L->>L: đưa hội thoại đó lên đầu\n  A->>L: bấm một hội thoại\n  L->>C: mở modal, truyền userId\n  C->>S: GET /messages/:userId/:adminId\n  A->>C: gõ và gửi\n  C->>S: socket sendMessage\n  C->>S: POST /messages (lưu vào DB)',
+    notes: ['Mỗi tin được gửi hai đường: socket để hiện ngay, POST để lưu lại.', 'Server phát tin tới mọi client đang mở socket; client phải tự lọc.'] },
+  { name: 'Hồ sơ admin', api: 'PATCH /user/:id', where: 'pages/profile/profile.jsx',
+    desc: 'Admin sửa thông tin cá nhân và ảnh đại diện.',
+    chain: [['ui', 'Profile'], ['state', 'đọc account từ context'], ['api', 'userApi.updateUser'], ['http', 'formData'], ['state', 'setAccount']],
+    mmd: 'sequenceDiagram\n  participant A as Admin\n  participant P as Profile\n  participant X as AccountContext\n  participant S as Server\n  P->>X: đọc account, điền sẵn form\n  A->>P: sửa thông tin, chọn ảnh, bấm Save\n  P->>S: PATCH /user/:id (form-data)\n  S-->>P: user đã cập nhật\n  P->>X: setAccount(user mới)\n  X-->>A: header và profile hiện thông tin mới',
+    notes: ['localStorage không được cập nhật, nên tải lại trang sẽ hiện thông tin cũ.'] }
+];
+var flowTabs = $('#flowTabs');
+flowTabs.innerHTML = FLOWS.map(function (f, i) { return '<button type="button" role="tab" data-i="' + i + '">' + (i + 1) + '. ' + esc(f.name) + '</button>'; }).join('');
+var mmdN = 0;
+function css(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+function initMermaid() {
+  if (!window.mermaid) return false;
+  window.mermaid.initialize({
+    startOnLoad: false, securityLevel: 'strict', theme: 'base',
+    fontFamily: 'Be Vietnam Pro, system-ui, sans-serif',
+    sequence: { mirrorActors: false, wrap: true, width: 170, messageFontSize: 14, actorFontSize: 14, noteFontSize: 13, boxMargin: 8 },
+    themeVariables: {
+      background: css('--surface'), primaryColor: css('--accent-soft'), primaryTextColor: css('--ink'), primaryBorderColor: css('--accent'),
+      lineColor: css('--muted'), textColor: css('--ink'), actorBkg: css('--accent-soft'), actorBorder: css('--accent'), actorTextColor: css('--ink'),
+      actorLineColor: css('--line'), signalColor: css('--muted'), signalTextColor: css('--ink'),
+      labelBoxBkgColor: css('--surface-2'), labelBoxBorderColor: css('--line'), labelTextColor: css('--ink'), loopTextColor: css('--muted'),
+      noteBkgColor: css('--ext-bg'), noteBorderColor: css('--ext'), noteTextColor: css('--ink')
+    }
+  });
+  return true;
+}
+var mermaidReady = null;
+function showFlow(i) {
+  var f = FLOWS[i];
+  Array.prototype.forEach.call(flowTabs.children, function (b, j) { b.setAttribute('aria-selected', j === i ? 'true' : 'false'); });
+  $('#flowPanel').innerHTML =
+    '<div class="flow-meta"><code>' + esc(f.api) + '</code><span class="chip" style="background:var(--surface-2);color:var(--muted)">' + esc(f.where) + '</span></div>' +
+    '<p style="margin-bottom:6px">' + esc(f.desc) + '</p>' +
+    '<div class="chain">' + f.chain.map(function (c) { return '<span class="chip c-' + c[0] + '">' + esc(c[1]) + '</span>'; }).join('<i>→</i>') + '</div>' +
+    '<div class="mmd"><div class="out"><span class="muted" style="font-size:.85rem">Đang vẽ sơ đồ…</span></div></div>' +
+    '<ul class="flow-notes">' + f.notes.map(function (n) { return '<li class="muted" style="font-size:.9rem">' + esc(n) + '</li>'; }).join('') + '</ul>';
+  var out = document.querySelector('#flowPanel .out');
+  if (mermaidReady === null) mermaidReady = initMermaid();
+  if (!mermaidReady) { out.innerHTML = '<pre>' + esc(f.mmd) + '</pre>'; return; }
+  window.mermaid.render('m' + (mmdN++), f.mmd).then(function (r) { out.innerHTML = r.svg; }).catch(function () { out.innerHTML = '<pre>' + esc(f.mmd) + '</pre>'; });
+}
+flowTabs.addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) showFlow(+b.dataset.i); });
+showFlow(0);
+
+/* ---------- API table ---------- */
+var API = [
+  ['authApi · mailApi', [['POST', '/auth/login', 'Đăng nhập'], ['POST', '/auth/request-password-reset', 'Xin OTP'], ['POST', '/auth/verify-otp', 'Xác minh OTP'], ['POST', '/auth/reset-password', 'Đặt mật khẩu mới']]],
+  ['productApi · categoryApi', [['GET · POST', '/product', 'Danh sách, tạo sản phẩm'], ['PATCH · DELETE', '/product/:id', 'Sửa, xoá sản phẩm'], ['GET · POST', '/category', 'Danh sách, tạo hãng'], ['PATCH · DELETE', '/category/:id', 'Sửa, xoá hãng'], ['GET', '/category/count', 'Đếm hãng'], ['GET', '/category/product-count', 'Số sản phẩm mỗi hãng']]],
+  ['userApi', [['GET', '/user', 'Danh sách user'], ['GET', '/user/count', 'Đếm user'], ['POST', '/user/block/:id', 'Khoá / mở'], ['PATCH', '/user/:id', 'Sửa hồ sơ']]],
+  ['orderApi · reviewApi', [['GET', '/admin/order', 'Mọi đơn'], ['PATCH', '/order/:id', 'Đổi trạng thái'], ['GET', '/order/total-success', 'Tổng doanh thu'], ['GET', '/order/daily-success-weekly', 'Doanh thu 7 ngày'], ['GET', '/review', 'Danh sách đánh giá'], ['DELETE', '/review/:id', 'Xoá đánh giá'], ['GET', '/review/count', 'Đếm đánh giá']]],
+  ['messagesApi', [['GET', '/messages', 'Danh sách hội thoại'], ['GET', '/messages/:userId/:adminId', 'Lịch sử một hội thoại'], ['POST', '/messages', 'Lưu tin nhắn']]]
+];
+$('#apiTable').innerHTML = '<tr><th>File</th><th>Method</th><th>Path</th><th>Làm gì</th></tr>' + API.map(function (g) {
+  return g[1].map(function (r, k) {
+    return '<tr><td>' + (k === 0 ? '<b>' + g[0] + '</b>' : '') + '</td><td class="m">' + r[0] + '</td><td><code>' + esc(r[1]) + '</code></td><td>' + esc(r[2]) + '</td></tr>';
+  }).join('');
+}).join('');
+
+/* ---------- TOC highlight ---------- */
+var links = Array.prototype.slice.call(document.querySelectorAll('nav.toc a'));
+if ('IntersectionObserver' in window) {
+  var io = new IntersectionObserver(function (es) {
+    es.forEach(function (e) { if (e.isIntersecting) links.forEach(function (a) { a.classList.toggle('active', a.getAttribute('href') === '#' + e.target.id); }); });
+  }, { rootMargin: '0px 0px -70% 0px' });
+  links.forEach(function (a) { var s = document.querySelector(a.getAttribute('href')); if (s) io.observe(s); });
+}
+})();
+</script>
+</body>
+</html>
