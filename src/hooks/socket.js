@@ -1,8 +1,8 @@
 import io from 'socket.io-client';
 import messagesApi from '../api/messagesApi';
+import { SERVER_URL } from '../config/env';
 
 let socket;
-const SERVER_URL = 'https://prolaptop-server.onrender.com'; // Đảm bảo URL chính xác của server WebSocket
 let isConnected = false; // Biến trạng thái để kiểm tra trạng thái kết nối
 
 export const connectSocket = () => {
