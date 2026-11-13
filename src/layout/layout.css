@@ -177,6 +177,27 @@
 	margin-left: 76px;
 }
 
+.admin-layout-collapsed .admin-footer {
+	flex-direction: column;
+	justify-content: center;
+	gap: 16px;
+	margin: 8px 6px;
+	padding: 14px 0;
+}
+
+.admin-layout-collapsed .admin-info {
+	justify-content: center;
+}
+
+.admin-layout-collapsed .admin-info > div {
+	display: none;
+}
+
+.admin-layout-collapsed .admin-icon,
+.admin-layout-collapsed .logout-icon {
+	margin: 0;
+}
+
 .site-layout {
 	min-height: 100vh;
 	padding: 32px;
@@ -282,13 +303,18 @@
 	}
 
 	.admin-footer {
+		flex-direction: column;
 		justify-content: center;
-		margin: 8px 4px;
-		padding: 12px 4px;
+		gap: 16px;
+		margin: 8px 6px;
+		padding: 14px 0;
 	}
 
-	.admin-info > div,
-	.admin-icon {
+	.admin-info {
+		justify-content: center;
+	}
+
+	.admin-info > div {
 		display: none;
 	}
 
