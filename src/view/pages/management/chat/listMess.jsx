@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import messagesApi from '../../../../api/messagesApi';
-import { Modal } from 'antd';
 import Chat from '../chat/chat';
 import moment from 'moment';
-import { connectSocket, disconnectSocket, onNewMessage, offNewMessage } from '../../../../hooks/socket';
+import { connectSocket, disconnectSocket, onNewMessage, joinRoom } from '../../../../hooks/socket';
 import './chat.css';
 
 const ChatList = () => {
@@ -13,10 +12,11 @@ const ChatList = () => {
 
   // Fetch initial chat list
   useEffect(() => {
+    let active = true;
     const fetchMessages = async () => {
       try {
         const response = await messagesApi.getListMessages();
-        setChats(response.data);
+        if (active) setChats(response.data);
       } catch (error) {
         console.error('Error fetching messages:', error);
       }
@@ -26,42 +26,54 @@ const ChatList = () => {
     // Kết nối WebSocket
     connectSocket();
 
-    // Lắng nghe sự kiện tin nhắn mới
-    onNewMessage((newMessage) => {
+    messagesApi.getAdminId()
+      .then((adminId) => {
+        if (active) joinRoom(adminId);
+      })
+      .catch((error) => console.error('Error joining admin chat room:', error));
+
+    const unsubscribe = onNewMessage((newMessage) => {
+      const senderId = newMessage.senderId || newMessage.sender?.id;
+      const receiverId = newMessage.receiverId || newMessage.receiver?.id;
+      if (!senderId || !receiverId) return;
+
       setChats((prevChats) => {
-        const updatedChats = [...prevChats];
-        const existingChatIndex = updatedChats.findIndex(
-          (chat) =>
-            (chat.sender.id === newMessage.senderId &&
-              chat.receiver.id === newMessage.receiverId) ||
-            (chat.sender.id === newMessage.receiverId &&
-              chat.receiver.id === newMessage.senderId)
-        );
+        const existingChatIndex = prevChats.findIndex((chat) => {
+          const chatSenderId = chat.sender?.id;
+          const chatReceiverId = chat.receiver?.id;
+          return (
+            (chatSenderId === senderId && chatReceiverId === receiverId) ||
+            (chatSenderId === receiverId && chatReceiverId === senderId)
+          );
+        });
 
         if (existingChatIndex !== -1) {
-          // Cập nhật nội dung tin nhắn cuối cùng
+          const updatedChats = [...prevChats];
           updatedChats[existingChatIndex] = {
             ...updatedChats[existingChatIndex],
             content: newMessage.content,
+            sender: newMessage.sender || updatedChats[existingChatIndex].sender,
+            receiver: newMessage.receiver || updatedChats[existingChatIndex].receiver,
+            senderRole: newMessage.senderRole || updatedChats[existingChatIndex].senderRole,
             timestamp: new Date().toISOString(),
           };
+          return updatedChats;
         } else {
-          // Thêm cuộc trò chuyện mới
-          updatedChats.unshift({
-            sender: { id: newMessage.senderId, userName: 'New User', avatar: '' },
-            receiver: { id: newMessage.receiverId },
+          return [{
+            ...newMessage,
+            sender: newMessage.sender || { id: senderId, userName: 'New User', avatar: '' },
+            receiver: newMessage.receiver || { id: receiverId },
             content: newMessage.content,
             timestamp: new Date().toISOString(),
-          });
+          }, ...prevChats];
         }
-
-        return updatedChats;
       });
     });
 
     return () => {
       // Ngắt kết nối WebSocket khi component bị unmount
-      offNewMessage();
+      active = false;
+      unsubscribe();
       disconnectSocket();
     };
   }, []);

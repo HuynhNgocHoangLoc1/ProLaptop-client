@@ -1,51 +1,76 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import ChatUI, { Bubble, useMessages } from '@chatui/core';
 import '@chatui/core/dist/index.css';
 import { Modal } from 'antd';
 import messagesApi from '../../../../api/messagesApi';
 import './chat.css';
-import { connectSocket, disconnectSocket, sendMessage, onNewMessage, offNewMessage } from '../../../../hooks/socket';
+import { connectSocket, sendMessage, onNewMessage, joinRoom } from '../../../../hooks/socket';
 
 export default function Chat({ userId, onOpen, setOnOpen, senderId, receiverId }) {
   const { messages, appendMsg } = useMessages([]);
-  const admin = '474c4675-3050-4e00-8c86-38c3347c9ea6';  // Đặt ID admin
+  const [adminId, setAdminId] = useState(null);
   const [content, setContent] = useState('');
+  const seenMessageIds = useRef(new Set());
 
-  // Kết nối và ngắt kết nối socket
   useEffect(() => {
-    connectSocket();
+    const fetchAdminId = async () => {
+      try {
+        const id = await messagesApi.getAdminId();
+        setAdminId(id);
+      } catch (error) {
+        console.error('Error fetching admin id:', error);
+      }
+    };
 
-    onNewMessage((newMessage) => {
+    fetchAdminId();
+  }, []);
+
+  useEffect(() => {
+    if (!adminId) return;
+
+    connectSocket();
+    joinRoom(adminId);
+
+    const unsubscribe = onNewMessage((newMessage) => {
       console.log('New message received:', newMessage);
-      if (newMessage.receiverId === admin && newMessage.senderId !== admin) {
-        const position = newMessage.senderId === userId ? 'left' : 'right';
+      if (!userId || !newMessage) return;
+
+      // Chỉ hiển thị tin nhắn của user đang mở chat với admin
+      if (
+        newMessage.receiverId === adminId &&
+        newMessage.senderId === userId
+      ) {
+        if (newMessage.id && seenMessageIds.current.has(newMessage.id)) return;
+        if (newMessage.id) seenMessageIds.current.add(newMessage.id);
         appendMsg({
           type: 'text',
           content: { text: newMessage.content },
-          position,
+          position: 'left',
         });
       }
+
     });
 
     return () => {
-      offNewMessage();
-      disconnectSocket();
+      unsubscribe();
     };
-  }, [userId]);
+  }, [adminId, userId]);
 
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const response = await messagesApi.getMessages(userId, senderId, receiverId);
+        if (!userId || !adminId) return;
+
+        const response = await messagesApi.getMessages(userId, adminId);
         response.data.forEach((msg) => {
-          if (msg.senderId !== admin) {
-            const position = msg.senderRole === 'admin' ? 'right' : 'left';
-            appendMsg({
-              type: 'text',
-              content: { text: msg.content },
-              position,
-            });
-          }
+          if (msg.id && seenMessageIds.current.has(msg.id)) return;
+          if (msg.id) seenMessageIds.current.add(msg.id);
+          const position = msg.senderRole === 'admin' ? 'right' : 'left';
+          appendMsg({
+            type: 'text',
+            content: { text: msg.content },
+            position,
+          });
         });
       } catch (error) {
         console.error('Error fetching messages:', error);
@@ -55,12 +80,12 @@ export default function Chat({ userId, onOpen, setOnOpen, senderId, receiverId }
     if (userId) {
       fetchMessages();
     }
-  }, [userId, senderId, receiverId]);
+  }, [userId, adminId, senderId, receiverId]);
 
   const handleSend = async (type, val) => {
-    if (type === 'text' && val.trim()) {
+    if (type === 'text' && val.trim() && adminId) {
       const newMessage = {
-        senderId: admin,
+        senderId: adminId,
         receiverId: userId,
         content: val,
       };

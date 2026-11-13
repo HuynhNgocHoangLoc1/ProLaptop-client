@@ -1,4 +1,4 @@
-import { Layout, Menu, Input } from 'antd';
+import { Layout, Menu } from 'antd';
 import {
     UserOutlined,
     DashboardOutlined,
@@ -7,7 +7,9 @@ import {
     StarOutlined,
     LogoutOutlined,
     MessageOutlined,
-    AppstoreOutlined
+    AppstoreOutlined,
+    MenuFoldOutlined,
+    MenuUnfoldOutlined
 } from '@ant-design/icons';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import './layout.css';
@@ -23,6 +25,7 @@ const AdminLayout = () => {
     const { account } = useContext(AccountContext);
     const [userName, setUserName] = useState('');
     const [email, setEmail] = useState('');
+    const [collapsed, setCollapsed] = useState(false);
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -49,17 +52,34 @@ const AdminLayout = () => {
     };
 
     return (
-        <Layout style={{ minHeight: '100vh', background: '#f0f2f5' }}>
-            <Sider width={'20%'} style={{ backgroundColor: '#022c43', boxShadow: '2px 0 5px rgba(0,0,0,0.15)' }}>
+        <Layout className={`admin-layout${collapsed ? ' admin-layout-collapsed' : ''}`}>
+            <Sider
+                width={252}
+                collapsedWidth={76}
+                collapsed={collapsed}
+                onCollapse={setCollapsed}
+                breakpoint="md"
+                trigger={null}
+                className="admin-sidebar"
+            >
                 <div className="logo-container">
-                    <div className="circular-logo" style={{ backgroundImage: `url(${account?.avatar})` }}></div>
-                    <h2 className="brand-name">PRO LAPTOP</h2>
+                    <button
+                        type="button"
+                        className="sidebar-toggle"
+                        aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                        onClick={() => setCollapsed(!collapsed)}
+                    >
+                        {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                    </button>
+                    <div className="circular-logo" style={{ backgroundImage: `url(${account?.avatar})` }} />
+                    {!collapsed && <h2 className="brand-name">PRO LAPTOP</h2>}
                 </div>
 
                 <Menu
-                    theme=""
+                    theme="dark"
                     mode="inline"
                     selectedKeys={[location.pathname]}
+                    defaultOpenKeys={['managements']}
                     className="custom-menu"
                 >
                     <Menu.Item
@@ -69,7 +89,7 @@ const AdminLayout = () => {
                         <Link to="/admin/dashboard">Dashboard</Link>
                     </Menu.Item>
 
-                    <SubMenu key="managements" title="Managements" icon={<AppstoreOutlined style={{ color: '#fff', fontSize: '24px' }} />} style={{ color: '#fff', backgroundColor: '#0C3A6C' }}>
+                    <SubMenu key="managements" title="Managements" icon={<AppstoreOutlined />}>
                         <Menu.Item
                             key="/admin/users"
                             icon={<UserOutlined style={{ color: '#fff', fontSize: '24px' }} />}
@@ -127,7 +147,7 @@ const AdminLayout = () => {
                 </div>
             </Sider>
 
-            <Layout>
+            <Layout className="admin-main">
                 <Content className="site-layout">
                     <Outlet />
                 </Content>

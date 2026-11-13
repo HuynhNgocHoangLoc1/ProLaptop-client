@@ -104,11 +104,10 @@ export default function DashBoard() {
     }, []);
     
 	return (
-		<div>
-			<h1 style={{ color: "#053971" }}>Dashboard Management</h1>
-			<div></div>
-			<Row gutter={16}>
-				<Col span={6}>
+		<div className="dashboard-page">
+			<h1>Dashboard</h1>
+			<Row gutter={[16, 16]}>
+				<Col xs={24} sm={12} xl={6}>
 					<Card>
 						{loadingStats ? (
 							<Spin size="large" />
@@ -124,7 +123,7 @@ export default function DashBoard() {
 						)}
 					</Card>
 				</Col>
-				<Col span={6}>
+				<Col xs={24} sm={12} xl={6}>
 					<Card>
 						{loadingStats ? (
 							<Spin size="large" />
@@ -139,7 +138,7 @@ export default function DashBoard() {
 						)}
 					</Card>
 				</Col>
-				<Col span={6}>
+				<Col xs={24} sm={12} xl={6}>
 					<Card>
 						{loadingStats ? (
 							<Spin size="large" />
@@ -154,7 +153,7 @@ export default function DashBoard() {
 						)}
 					</Card>
 				</Col>
-				<Col span={6}>
+				<Col xs={24} sm={12} xl={6}>
 					<Card>
 						{loadingStats ? (
 							<Spin size="large" />
@@ -170,13 +169,13 @@ export default function DashBoard() {
 					</Card>
 				</Col>
 			</Row>
-			<Row gutter={16}>
-				<Col span={16}>
-					<Card title="Daily Revenue" style={{ marginTop: 16 }}>
+			<Row gutter={[16, 16]} className="dashboard-charts">
+				<Col xs={24} xl={16}>
+					<Card title="Daily Revenue">
 						{loadingRevenue ? (
 							<Spin size="large" />
 						) : weeklyRevenueData.length > 0 ? (
-							<ResponsiveContainer width="100%" height={450}>
+							<ResponsiveContainer width="100%" height={360}>
 								<LineChart data={weeklyRevenueData}>
 									<CartesianGrid strokeDasharray="3 3" />
 									<XAxis
@@ -199,12 +198,12 @@ export default function DashBoard() {
 						)}
 					</Card>
 				</Col>
-				<Col span={8}>
-					<Card title="Product Categories" style={{ marginTop: 16 }}>
+				<Col xs={24} xl={8}>
+					<Card title="Product Categories">
 						{loadingCategory ? (
 							<Spin size="large" />
 						) : categoryData.length > 0 ? (
-							<ResponsiveContainer width="100%" height={449}>
+							<ResponsiveContainer width="100%" height={360}>
 								<PieChart>
 									<Pie
 										data={categoryData}

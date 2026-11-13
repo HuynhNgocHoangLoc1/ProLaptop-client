@@ -3,22 +3,21 @@ import messagesApi from '../api/messagesApi';
 import { SERVER_URL } from '../config/env';
 
 let socket;
-let isConnected = false; // Biến trạng thái để kiểm tra trạng thái kết nối
+const joinedRooms = new Set();
 
 export const connectSocket = () => {
-  if (!socket || !isConnected) { // Đảm bảo chỉ tạo một kết nối
+  if (!socket) {
     socket = io(SERVER_URL, {
       transports: ['websocket'],
       reconnectionAttempts: 5, // Số lần thử kết nối lại
     });
 
     socket.on('connect', () => {
-      isConnected = true;
       console.log('Connected to socket server:', socket.id);
+      joinedRooms.forEach((roomId) => socket.emit('joinRoom', { userId: roomId }));
     });
 
     socket.on('disconnect', () => {
-      isConnected = false;
       console.log('Disconnected from socket server');
     });
 
@@ -29,13 +28,15 @@ export const connectSocket = () => {
     socket.on('reconnect_failed', () => {
       console.error('Reconnection failed');
     });
+  } else if (!socket.connected) {
+    socket.connect();
   }
 };
 
 export const disconnectSocket = () => {
   if (socket) {
     socket.disconnect();
-    isConnected = false;
+    joinedRooms.clear();
     console.log('Disconnected from socket server');
   }
 };
@@ -49,16 +50,26 @@ export const disconnectSocket = () => {
 //   }
 // };
 
+export const joinRoom = (userId) => {
+  if (userId) {
+    joinedRooms.add(userId);
+  }
+  if (socket?.connected && userId) {
+    socket.emit('joinRoom', { userId });
+  }
+};
+
 export const sendMessage = async (message) => {
   if (socket) {
     try {
-      // Gửi tin nhắn qua socket
-      socket.emit('sendMessage', message);
-      console.log('Message sent via socket:', message);
-
-      // Gửi tin nhắn qua API
-      await messagesApi.send(message);
-      console.log('Message sent via API:', message);
+      const response = await messagesApi.send(message);
+      const savedMessage = {
+        ...response.data,
+        senderId: message.senderId,
+        receiverId: message.receiverId,
+      };
+      socket.emit('sendMessage', savedMessage);
+      console.log('Message sent:', savedMessage);
     } catch (error) {
       console.error('Failed to send message:', error);
     }
@@ -71,11 +82,13 @@ export const sendMessage = async (message) => {
 export const onNewMessage = (callback) => {
   if (socket) {
     socket.on('receive_message', callback);
+    return () => socket?.off('receive_message', callback);
   }
+  return () => {};
 };
 
-export const offNewMessage = () => {
-  if (socket) {
-    socket.off('receive_message');
+export const offNewMessage = (callback) => {
+  if (socket && callback) {
+    socket.off('receive_message', callback);
   }
 };

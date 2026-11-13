@@ -1,24 +1,49 @@
-/* Giao diện tổng quan cho Dashboard */
-h1 {
-    text-align: center;
-    margin-bottom: 20px;
+.dashboard-page {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
-.ant-card {
+.dashboard-page h1 {
+    margin-bottom: 0;
+}
+
+.dashboard-page .ant-card {
+    height: 100%;
     border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-color: #e7edf4;
+    box-shadow: 0 6px 20px rgba(30, 55, 80, 0.05);
 }
 
-.ant-statistic-title {
-    font-size: 18px;
-    color: #555;
+.dashboard-page .ant-statistic-title {
+    color: #6b7f93;
+    font-size: 14px;
 }
 
-.ant-statistic-value {
-    font-size: 24px;
-    font-weight: bold;
+.dashboard-page .ant-statistic-value {
+    font-size: 25px;
+    font-weight: 700;
 }
 
-.ant-card-body {
-    text-align: center; /* Canh giữa nội dung trong card */
+.dashboard-page .ant-statistic-content-prefix {
+    margin-inline-end: 10px;
+}
+
+.dashboard-charts .ant-card-head-title {
+    color: #35516d;
+    font-weight: 600;
+}
+
+.dashboard-charts .ant-card-body {
+    padding: 18px;
+}
+
+@media (max-width: 767px) {
+    .dashboard-page .ant-statistic-value {
+        font-size: 22px;
+    }
+
+    .dashboard-charts .ant-card-body {
+        padding: 12px;
+    }
 }

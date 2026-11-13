@@ -167,6 +167,7 @@ const UserManagement = () => {
 				rowKey="id"
 				bordered
 				loading={isLoading}
+				scroll={{ y: 400 }}
 				pagination={{
 					pageSize,
 					current: currentPage,
